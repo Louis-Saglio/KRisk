@@ -2,19 +2,22 @@ package engine.game
 
 import engine.game.world.Territory
 
-class Player(val name: String, initialArmyNumber: Int) {
-    private var initalArmyNumber = initialArmyNumber
+internal class Player(val name: String, armyToPlaceNumber: Int) {
+
+    private var armyToPlaceNumber = armyToPlaceNumber
         set(value) {
             if (value >= 0) field = value
-            else throw RuntimeException("Can't set negative initialArmyNumber")
+            else throw RuntimeException("Can't set negative armyToPlaceNumber")
         }
+
     private val territories = mutableListOf<Territory>()
 
     fun addTerritory(territory: Territory) {
-        initalArmyNumber -= 1
+        armyToPlaceNumber -= 1
         territories.add(territory)
+        territory.increaseArmyNumber(1)
     }
 
-    fun getInitialArmyNumberForTest() = initalArmyNumber
+    fun getArmyToPlaceForTest() = armyToPlaceNumber
     fun getTerritoriesForTest() = territories
 }
