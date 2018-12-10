@@ -10,12 +10,23 @@ internal class Player(val name: String, armyToPlaceNumber: Int) {
             else throw RuntimeException("Can't set negative armyToPlaceNumber")
         }
 
+    fun getRemainingArmyToPlaceNumber() = armyToPlaceNumber
+
     private val territories = mutableListOf<Territory>()
 
-    fun addTerritory(territory: Territory) {
-        armyToPlaceNumber -= 1
+    fun claimTerritory(territory: Territory) {
         territories.add(territory)
+        placeOneArmyOn(territory)
+    }
+
+    fun placeOneArmyOn(territory: Territory) {
+        if (!territories.contains(territory)) throw RuntimeException("Can't add army to not owned territory")
+        armyToPlaceNumber -= 1
         territory.increaseArmyNumber(1)
+    }
+
+    override fun toString(): String {
+        return "Player($name)"
     }
 
     fun getArmyToPlaceForTest() = armyToPlaceNumber

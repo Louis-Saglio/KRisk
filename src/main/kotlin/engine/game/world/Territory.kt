@@ -10,4 +10,8 @@ class Territory(val name: String) {
     internal fun getArmyNumberForTest(): Int {
         return armyNumber
     }
+
+    override fun toString(): String {
+        return name
+    }
 }

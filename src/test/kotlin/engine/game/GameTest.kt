@@ -1,5 +1,6 @@
 package engine.game
 
+import engine.RiskEngine
 import engine.game.world.Continent
 import engine.game.world.Territory
 import engine.game.world.World
@@ -22,13 +23,12 @@ internal class GameTest {
 
     @Test
     fun setupTerritories() {
-        val game = Game(buildWorld(), "p1", "p2", "p3")
-        game.setupTerritories()
-        val (p1, p2,p3) = game.getPlayersForTest()
+        val engine = RiskEngine(buildWorld(), "p1", "p2", "p3")
+        val (p1, p2,p3) = engine.getPlayersForTest()
         assertEquals(33, p1.getArmyToPlaceForTest())
         assertEquals(33, p2.getArmyToPlaceForTest())
         assertEquals(34, p3.getArmyToPlaceForTest())
-        game.getTerritoriesForTest().forEach { assertEquals(1, it.getArmyNumberForTest(), it.name) }
+        engine.getTerritoriesForTest().forEach { assertEquals(1, it.getArmyNumberForTest(), it.name) }
         assertEquals(p1.getTerritoriesForTest().size, 2)
         assertEquals(p2.getTerritoriesForTest().size, 2)
         assertEquals(p3.getTerritoriesForTest().size, 1)

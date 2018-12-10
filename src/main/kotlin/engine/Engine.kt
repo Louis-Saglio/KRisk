@@ -12,8 +12,9 @@ abstract class Engine<InputType, OutputType> {
     protected open suspend fun main() {
         while (mustRun()) {
             val input = inputQueue.receive()
-            outputQueue.send(handle(input))
+            val element = handle(input)
             println("$input handled")
+            outputQueue.send(element)
         }
     }
 
@@ -24,6 +25,7 @@ abstract class Engine<InputType, OutputType> {
     protected abstract suspend fun handle(input: InputType): OutputType
 
     fun start() {
+        // Put in constructor ?
         GlobalScope.launch { main() }
     }
 
