@@ -10,8 +10,23 @@ abstract class Action(val playerName: String) {
 }
 
 enum class Result {
+
     ACTION_NOT_EXPECTED,
-    ACTION_PROCESSED
+    ACTION_PROCESSED,
+    ERROR_WHILE_PROCESSING_ACTION;
+
+    private var message: String? = null
+
+    override fun toString(): String{
+        return super.toString() + message.let { " : $message" }
+    }
+
+    operator fun invoke(message: String?): Result {
+        this.message = message
+        return this
+    }
+
+
 }
 
 class PlaceOneInitialArmyAction(val territory: Territory? = null, playerName: String): Action(playerName) {
@@ -34,10 +49,13 @@ class RiskEngine(val world: World, vararg playerNames: String): Engine<Action, R
 
     override suspend fun handle(input: Action): Result {
         if (expectedAction != null && expectedAction!!.matches(input)) {
-            // todo : manage exceptions during execute
-            when (input) {
-                is PlaceOneInitialArmyAction -> execute(input)
-                else -> throw NotImplementedError("$input")
+            try {
+                when (input) {
+                    is PlaceOneInitialArmyAction -> execute(input)
+                    else -> throw NotImplementedError("$input")
+                }
+            } catch (error: RuntimeException) {
+                return Result.ERROR_WHILE_PROCESSING_ACTION(error.message)
             }
             players.passToNext()
             return Result.ACTION_PROCESSED
