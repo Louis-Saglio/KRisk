@@ -1,5 +1,6 @@
 package engine.game
 
+import engine.RiskEngine
 import engine.game.world.Territory
 
 internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArray.toMutableList()) {
@@ -7,8 +8,8 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
 
     private var currentIndex = 0
 
-    constructor(armyNumberToPlace: Int, vararg names: String) : this() {
-        this.addAll(names.map { Player(it, armyNumberToPlace) })
+    constructor(engine: RiskEngine, armyNumberToPlace: Int, vararg names: String) : this() {
+        this.addAll(names.map { Player(engine, it, armyNumberToPlace) })
     }
 
     fun getActual() = get(currentIndex)

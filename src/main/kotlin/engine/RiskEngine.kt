@@ -1,12 +1,13 @@
 package engine
 
+import engine.game.Player
 import engine.game.Players
 import engine.game.world.World
 
 
 class RiskEngine(val world: World, vararg playerNames: String) {
 
-    private val players = Players(initialArmyNumberByPlayerNumber.getValue(playerNames.size), *playerNames)
+    private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), *playerNames)
 
     fun setupTerritories() {
         players.forEachClaimTerritory(world.getTerritories().shuffled())
@@ -14,10 +15,17 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     fun placeInitialArmies() {
         players.setToFirst()
-        while (players.count { it.getArmyToPlaceNumber() > 0 } > 0) {
+        while (players.any { it.getArmyToPlaceNumber() > 0 }) {
             players.getActual().takeIf { it.getArmyToPlaceNumber() > 0 }?.placeOneArmy()
             players.passToNext()
         }
+    }
+
+    fun playTurns() {
+        do {
+            players.getActual().playTurn()
+            players.passToNext()
+        } while (players.none(Player::hasWon))
     }
 
     companion object {
