@@ -1,6 +1,5 @@
 package engine.game
 
-import engine.RiskEngine
 import engine.game.world.Territory
 
 internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArray.toMutableList()) {
