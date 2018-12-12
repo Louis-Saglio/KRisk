@@ -1,5 +1,6 @@
 package engine.game
 
+import debug
 import engine.game.world.Territory
 
 internal class Player(val name: String, armyToPlaceNumber: Int) {
@@ -10,7 +11,9 @@ internal class Player(val name: String, armyToPlaceNumber: Int) {
             else throw RuntimeException("Can't set negative armyToPlaceNumber")
         }
 
-    fun getRemainingArmyToPlaceNumber() = armyToPlaceNumber
+    fun getArmyToPlaceNumber(): Int {
+        return armyToPlaceNumber
+    }
 
     private val territories = mutableListOf<Territory>()
 
@@ -19,7 +22,7 @@ internal class Player(val name: String, armyToPlaceNumber: Int) {
         placeOneArmyOn(territory)
     }
 
-    fun placeOneArmyOn(territory: Territory) {
+    private fun placeOneArmyOn(territory: Territory) {
         if (!territories.contains(territory)) throw RuntimeException("Can't add army to not owned territory")
         armyToPlaceNumber -= 1
         territory.increaseArmyNumber(1)
@@ -29,10 +32,21 @@ internal class Player(val name: String, armyToPlaceNumber: Int) {
         return "Player($name)"
     }
 
-    fun getArmyToPlaceForTest() = armyToPlaceNumber
-    fun getTerritoriesForTest() = territories
-
     fun placeOneArmy() {
-        
+        val territory = chooseTerritory()
+        placeOneArmyOn(territory)
     }
+
+    private fun chooseTerritory(): Territory {
+        if (debug) return territories.random()
+        var territory: Territory?
+        do {
+            println("Choose territory for $this : ")
+            val input = readLine()
+            territory = territories.find { it.name == input }
+        } while (!territories.contains(territory) || territory == null)
+        return territory
+    }
+
+    fun getTerritoriesForTest() = territories
 }

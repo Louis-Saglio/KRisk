@@ -1,6 +1,5 @@
 package engine.game
 
-import engine.RiskEngine
 import engine.game.world.Territory
 
 internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArray.toMutableList()) {
@@ -16,8 +15,6 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
 
     private fun getNextIndex() = (currentIndex + 1) % size
 
-    fun getNext() = get(getNextIndex())
-
     fun passToNext() {
         currentIndex = getNextIndex()
     }
@@ -27,6 +24,8 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
     }
 
     fun forEachClaimTerritory(territories: List<Territory>) {
+        // business logic
+        currentIndex = (0 until size).random()
         loopApply(territories, Player::claimTerritory)
     }
 
