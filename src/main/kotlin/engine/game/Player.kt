@@ -31,4 +31,8 @@ internal class Player(val name: String, armyToPlaceNumber: Int) {
 
     fun getArmyToPlaceForTest() = armyToPlaceNumber
     fun getTerritoriesForTest() = territories
+
+    fun placeOneArmy() {
+        
+    }
 }

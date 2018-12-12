@@ -8,7 +8,7 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
 
     private var currentIndex = 0
 
-    constructor(engine: RiskEngine, armyNumberToPlace: Int, vararg names: String) : this() {
+    constructor(armyNumberToPlace: Int, vararg names: String) : this() {
         this.addAll(names.map { Player(it, armyNumberToPlace) })
     }
 
