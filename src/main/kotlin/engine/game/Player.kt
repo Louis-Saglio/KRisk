@@ -1,7 +1,7 @@
 package engine.game
 
-import debug
 import engine.RiskEngine
+import engine.choose
 import engine.game.world.Territory
 
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
@@ -34,7 +34,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun placeOneArmy() {
-        val territory = chooseTerritory { it in territories }
+        val territory = chooseOwnedTerritory()
         placeOneArmyOn(territory)
     }
 
@@ -51,8 +51,8 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     private fun fortifyPosition() {
-        val firstTerritory = chooseTerritory { it in territories }
-        val secondTerritory = chooseTerritory {
+        val firstTerritory = chooseOwnedTerritory()
+        val secondTerritory = chooseOwnedTerritory {
             engine.world.borders.any {
                     border -> setOf(border.territory1, border.territory2) == setOf(firstTerritory, it)
             }
@@ -90,18 +90,6 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         }
     }
 
-    private fun <T> choose(message: String, ifDebug: () -> T, cast: (String?) -> T?, isValid: (T) -> Boolean): T {
-        // todo test
-        if (debug) return ifDebug()
-        var chosen: T?
-        do {
-            println(message)
-            val input = readLine()
-            chosen = cast(input)
-        } while (chosen == null || !isValid(chosen))
-        return chosen
-    }
-
     private fun chooseTerritory(isValid: (Territory) -> Boolean): Territory {
         return choose(
             message = "Choose territory for $this : ",
@@ -109,6 +97,10 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             cast = { engine.world.getTerritories().find { territory -> territory.name == it } },
             isValid = isValid
         )
+    }
+
+    private fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
+        return chooseTerritory { it in territories && if (isValid == null) true else isValid(it) }
     }
 
     private fun chooseInt(isValid: (Int) -> Boolean): Int {
