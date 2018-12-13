@@ -3,6 +3,7 @@ package engine
 import engine.game.Player
 import engine.game.Players
 import engine.game.world.World
+import org.jetbrains.annotations.TestOnly
 
 
 class RiskEngine(val world: World, vararg playerNames: String) {
@@ -37,8 +38,10 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         )
     }
 
+    @TestOnly
     internal fun getPlayersForTest() = players
 
+    @TestOnly
     internal fun getTerritoriesForTest() = world.getTerritories()
 
 }

@@ -3,6 +3,7 @@ package engine.game
 import engine.RiskEngine
 import engine.choose
 import engine.game.world.Territory
+import org.jetbrains.annotations.TestOnly
 
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
 
@@ -12,17 +13,21 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             else throw RuntimeException("Can't set negative armyToPlaceNumber")
         }
 
-    fun getArmyToPlaceNumber(): Int {
-        return armyToPlaceNumber
-    }
+    fun getArmyToPlaceNumber() = armyToPlaceNumber  // todo : replace by backing field
 
     private val territories = mutableListOf<Territory>()
 
+    /**
+     * Add territory to the owned territories list and place one army on it
+     */
     fun claimTerritory(territory: Territory) {
         territories.add(territory)
         placeOneArmyOn(territory)
     }
 
+    /**
+     * Take an army from the armyToPlaceNumber reserve and place it on territory
+     */
     private fun placeOneArmyOn(territory: Territory) {
         if (territory !in territories) throw RuntimeException("Can't add army to not owned territory")
         armyToPlaceNumber -= 1
@@ -33,12 +38,13 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         return "Player($name)"
     }
 
+    /**
+     * Choose an owned territory and place one army on it
+     */
     fun placeOneArmy() {
         val territory = chooseOwnedTerritory()
         placeOneArmyOn(territory)
     }
-
-    fun getTerritoriesForTest() = territories
 
     fun hasWon(): Boolean {
         return false
@@ -110,5 +116,18 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             cast = { it?.toInt() },
             isValid = isValid
         )
+    }
+
+    @TestOnly
+    fun addTerritoryForTest(territory: Territory) {
+        territories.add(territory)
+    }
+
+    @TestOnly
+    fun getTerritoriesForTest() = territories
+
+    @TestOnly
+    fun computeContinentalReinforcementForTest() {
+        computeContinentalReinforcement()
     }
 }
