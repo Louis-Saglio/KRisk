@@ -11,11 +11,6 @@ class Territory(val name: String) {
         armyNumber += delta
     }
 
-    internal fun getArmyNumberForTest(): Int {
-        // todo deprecated
-        return armyNumber
-    }
-
     override fun toString(): String {
         return name
     }
