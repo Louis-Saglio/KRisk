@@ -64,4 +64,42 @@ internal class PlayerTest {
         player.computeContinentalReinforcementForTest()
         assertEquals(45, player.getArmyToPlaceNumber())
     }
+
+    @Test
+    fun computeTerritorialReinforcementLessThan3() {
+        val continent = Continent("ctn", 3, listOf(territory))
+        `when`(engine.world).thenReturn(mock(World::class.java))
+        `when`(engine.world.continents).thenReturn(listOf(continent))
+        player.addTerritoryForTest(territory)
+        player.addTerritoryForTest(Territory("t1"))
+        player.computeTerritorialReinforcementForTest()
+        assertEquals(45, player.getArmyToPlaceNumber())
+    }
+
+    @Test
+    fun computeTerritorialReinforcementMoreThan3() {
+        val continent = Continent("ctn", 3, listOf(territory))
+        `when`(engine.world).thenReturn(mock(World::class.java))
+        `when`(engine.world.continents).thenReturn(listOf(continent))
+        player.addTerritoryForTest(territory)
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.addTerritoryForTest(Territory("t1"))
+        player.computeTerritorialReinforcementForTest()
+        assertEquals(46, player.getArmyToPlaceNumber())
+    }
+
+    @Disabled("Not yet implemented")
+    @Test fun getCombinationReinforcement() {
+        player.getCombinationReinforcementForTest()
+    }
 }

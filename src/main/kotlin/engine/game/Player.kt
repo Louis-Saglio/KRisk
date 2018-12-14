@@ -130,4 +130,14 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun computeContinentalReinforcementForTest() {
         computeContinentalReinforcement()
     }
+
+    @TestOnly
+    fun computeTerritorialReinforcementForTest() {
+        computeTerritorialReinforcement()
+    }
+
+    @TestOnly
+    fun getCombinationReinforcementForTest() {
+        getCombinationReinforcement()
+    }
 }
