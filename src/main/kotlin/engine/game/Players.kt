@@ -6,6 +6,15 @@ import engine.game.world.Territory
 internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArray.toMutableList()) {
     // Lot of not business logic
 
+    init {
+        for (player in this) {
+            if (count { it.name == player.name } != 1)
+                throw RuntimeException(
+                    "Player name unique constraint violation : more than one player named ${player.name}"
+                )
+        }
+    }
+
     private var currentIndex = 0
 
     constructor(engine: RiskEngine, armyNumberToPlace: Int, vararg names: String) : this() {
