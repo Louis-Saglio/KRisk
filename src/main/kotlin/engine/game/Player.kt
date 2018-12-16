@@ -65,7 +65,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
                     border -> setOf(border.territory1, border.territory2) == setOf(firstTerritory, it)
             }
         }
-        val armyNumber = chooseInt { it in 0 until firstTerritory.armyNumber }
+        val armyNumber = chooseArmyNumberToTransferFrom(firstTerritory)
         firstTerritory.armyNumber -= armyNumber
         secondTerritory.armyNumber += armyNumber
     }
@@ -112,12 +112,12 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         return chooseTerritory { it in territories && if (isValid == null) true else isValid(it) }
     }
 
-    private fun chooseInt(isValid: (Int) -> Boolean): Int {
+    private fun chooseArmyNumberToTransferFrom(origin: Territory): Int {
         return choose(
-            message = "Choose Int",
-            ifDebug = (0..30)::random,
+            message = "Choose a number between 0 and ${origin.armyNumber - 1}",
+            ifDebug = { 5 },
             cast = { it?.toInt() },
-            isValid = isValid
+            isValid = { it in 0 until origin.armyNumber }
         )
     }
 
@@ -155,6 +155,11 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     @TestOnly
     fun addCardForTest(card: Card) {
         cards.add(card)
+    }
+
+    @TestOnly
+    fun fortifyPositionForTest() {
+        fortifyPosition()
     }
 }
 
