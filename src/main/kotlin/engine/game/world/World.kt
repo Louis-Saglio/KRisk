@@ -6,7 +6,7 @@ class World(val continents: List<Continent>, val borders: List<Border>) {
         return continents.flatMap { it.territories }
     }
 
-    fun getTerritoryByName(name: String): Territory? {
+    fun getTerritoryByName(name: String?): Territory? {
         return getTerritories().find { it.name == name }
     }
 }

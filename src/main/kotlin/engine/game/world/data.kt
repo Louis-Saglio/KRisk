@@ -1,5 +1,10 @@
 package engine.game.world
 
+import engine.game.OneOfEachKind
+import engine.game.ThreeArtillery
+import engine.game.ThreeCavalries
+import engine.game.ThreeInfantries
+
 fun buildWorld(): World {
     val europeDuSud = Territory("Europe-du-Sud")
     val europeDeLOuest = Territory("Europe-Occidentale")
@@ -86,3 +91,10 @@ fun buildWorld(): World {
         )
     )
 }
+
+val combinations = setOf(
+    ThreeInfantries,
+    ThreeCavalries,
+    ThreeArtillery,
+    OneOfEachKind
+)

@@ -3,6 +3,7 @@ package engine.game
 import engine.RiskEngine
 import engine.choose
 import engine.game.world.Territory
+import engine.game.world.combinations
 import org.jetbrains.annotations.TestOnly
 
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
@@ -16,6 +17,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun getArmyToPlaceNumber() = armyToPlaceNumber  // todo : replace by backing field
 
     private val territories = mutableListOf<Territory>()
+    private val cards = mutableListOf<Card>()
 
     /**
      * Add territory to the owned territories list and place one army on it
@@ -80,7 +82,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     private fun getCombinationReinforcement() {
-        // todo
+        armyToPlaceNumber += (1..3).map { chooseOwnedCard() }.getBestCombination()?.reinforcement ?: 0
     }
 
     private fun computeTerritorialReinforcement() {
@@ -100,12 +102,13 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         return choose(
             message = "Choose territory for $this : ",
             ifDebug = { territories.random() },
-            cast = { engine.world.getTerritories().find { territory -> territory.name == it } },
+            cast = { engine.world.getTerritoryByName(it) },
             isValid = isValid
         )
     }
 
     private fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
+        // todo: optimize by searching only in this.territories in the cast function
         return chooseTerritory { it in territories && if (isValid == null) true else isValid(it) }
     }
 
@@ -115,6 +118,14 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             ifDebug = (0..30)::random,
             cast = { it?.toInt() },
             isValid = isValid
+        )
+    }
+
+    private fun chooseOwnedCard(): Card {
+        return choose(
+            message = "Choose a card between ${cards.joinToString()}",
+            ifDebug = { cards.random() },
+            cast = { cards.find { card -> card.territory.name == it } }
         )
     }
 
@@ -140,4 +151,11 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun getCombinationReinforcementForTest() {
         getCombinationReinforcement()
     }
+
+    @TestOnly
+    fun addCardForTest(card: Card) {
+        cards.add(card)
+    }
 }
+
+private fun List<Card>.getBestCombination() = combinations.filter { it.matches(this) }.maxBy { it.reinforcement }

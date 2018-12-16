@@ -2,15 +2,15 @@ package engine.game
 
 import debug
 import engine.RiskEngine
+import engine.game.world.Continent
 import engine.game.world.Territory
+import engine.game.world.World
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
-import engine.game.world.Continent
-import engine.game.world.World
 
 
 internal class PlayerTest {
@@ -98,8 +98,12 @@ internal class PlayerTest {
         assertEquals(46, player.getArmyToPlaceNumber())
     }
 
-    @Disabled("Not yet implemented")
-    @Test fun getCombinationReinforcement() {
+    @Test
+    fun getCombinationReinforcement() {
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
         player.getCombinationReinforcementForTest()
+        assertEquals(48, player.getArmyToPlaceNumber())
     }
 }
