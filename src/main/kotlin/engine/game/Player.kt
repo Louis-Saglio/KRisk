@@ -101,7 +101,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     private fun chooseTerritory(isValid: (Territory) -> Boolean): Territory {
         return choose(
             message = "Choose territory for $this : ",
-            ifDebug = { territories.random() },
+            ifDebug = { territories.map { it.name }.random() },
             cast = { engine.world.getTerritoryByName(it) },
             isValid = isValid
         )
@@ -115,7 +115,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     private fun chooseArmyNumberToTransferFrom(origin: Territory): Int {
         return choose(
             message = "Choose a number between 0 and ${origin.armyNumber - 1}",
-            ifDebug = { 5 },
+            ifDebug = { "5" },
             cast = { it?.toInt() },
             isValid = { it in 0 until origin.armyNumber }
         )
@@ -124,11 +124,12 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     private fun chooseOwnedCard(): Card {
         return choose(
             message = "Choose a card between ${cards.joinToString()}",
-            ifDebug = { cards.random() },
+            ifDebug = { cards.map { it.territory.name }.random() },
             cast = { cards.find { card -> card.territory.name == it } }
         )
     }
 
+    //<editor-fold desc="TestOnly">
     @TestOnly
     fun addTerritoryForTest(territory: Territory) {
         territories.add(territory)
@@ -166,6 +167,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun manageReinforcementForTest() {
         manageReinforcement()
     }
+    //</editor-fold>
 }
 
 private fun List<Card>.getBestCombination() = combinations.filter { it.matches(this) }.maxBy { it.reinforcement }

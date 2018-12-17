@@ -42,6 +42,8 @@ internal class PlayerTest {
 
     @Test
     fun placeOneArmy() {
+        `when`(engine.world).thenReturn(mock(World::class.java))
+        `when`(engine.world.getTerritoryByName("motherland")).thenReturn(territory)
         player.addTerritoryForTest(territory)
         player.placeOneArmy()
         assertEquals(1, territory.armyNumber)
@@ -116,6 +118,8 @@ internal class PlayerTest {
         val territory1 = Territory("t1")
         `when`(engine.world).thenReturn(mock(World::class.java))
         `when`(engine.world.borders).thenReturn(listOf(Border(territory, territory1)))
+        `when`(engine.world.getTerritoryByName("motherland")).thenReturn(territory)
+        `when`(engine.world.getTerritoryByName("t1")).thenReturn(territory1)
         player.addTerritoryForTest(territory1)
         territory.increaseArmyNumber(6)
         territory1.increaseArmyNumber(7)
@@ -129,6 +133,7 @@ internal class PlayerTest {
         val continent = Continent("ctn", 3, listOf(territory))
         `when`(engine.world).thenReturn(mock(World::class.java))
         `when`(engine.world.continents).thenReturn(listOf(continent))
+        `when`(engine.world.getTerritoryByName("motherland")).thenReturn(territory)
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
