@@ -23,6 +23,8 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
      * Add territory to the owned territories list and place one army on it
      */
     fun claimTerritory(territory: Territory) {
+        if (territory.armyNumber > 0)
+            throw RuntimeException("$this can't claim terrytory $territory because it is already owned")
         territories.add(territory)
         placeOneArmyOn(territory)
     }
@@ -49,8 +51,10 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun hasWon(): Boolean {
-        return false
+        return hasConqueredWorld()
     }
+
+    private fun hasConqueredWorld() = territories.containsAll(engine.world.getTerritories())
 
     fun playTurn() {
         manageReinforcement()

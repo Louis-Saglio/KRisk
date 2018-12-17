@@ -50,9 +50,12 @@ internal class PlayerTest {
         assertEquals(0, player.getArmyToPlaceNumber())
     }
 
-    @Disabled("Not yet implemented")
     @Test
     fun hasWon() {
+        `when`(engine.world).thenReturn(mock(World::class.java))
+        `when`(engine.world.getTerritories()).thenReturn(listOf(territory))
+        player.addTerritoryForTest(territory)
+        assertTrue(player.hasWon())
     }
 
     @Disabled("Not yet implemented")
