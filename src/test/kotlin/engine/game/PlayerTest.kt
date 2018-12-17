@@ -29,7 +29,7 @@ internal class PlayerTest {
     @BeforeEach
     internal fun setUp() {
         engine = mock(RiskEngine::class.java)
-        player = Player(engine, "tester", 42) // todo : last arg nullable ?
+        player = Player(engine, "tester", 1) // todo : last arg nullable ?
         territory = Territory("motherland")
     }
 
@@ -37,7 +37,7 @@ internal class PlayerTest {
     fun claimTerritory() {
         player.claimTerritory(territory)
         assertEquals(1, territory.armyNumber)
-        assertEquals(41, player.getArmyToPlaceNumber())
+        assertEquals(0, player.getArmyToPlaceNumber())
     }
 
     @Test
@@ -45,7 +45,7 @@ internal class PlayerTest {
         player.addTerritoryForTest(territory)
         player.placeOneArmy()
         assertEquals(1, territory.armyNumber)
-        assertEquals(41, player.getArmyToPlaceNumber())
+        assertEquals(0, player.getArmyToPlaceNumber())
     }
 
     @Disabled("Not yet implemented")
@@ -65,7 +65,7 @@ internal class PlayerTest {
         `when`(engine.world.continents).thenReturn(listOf(continent))
         player.addTerritoryForTest(territory)
         player.computeContinentalReinforcementForTest()
-        assertEquals(45, player.getArmyToPlaceNumber())
+        assertEquals(4, player.getArmyToPlaceNumber())
     }
 
     @Test
@@ -76,7 +76,7 @@ internal class PlayerTest {
         player.addTerritoryForTest(territory)
         player.addTerritoryForTest(Territory("t1"))
         player.computeTerritorialReinforcementForTest()
-        assertEquals(45, player.getArmyToPlaceNumber())
+        assertEquals(4, player.getArmyToPlaceNumber())
     }
 
     @Test
@@ -98,7 +98,7 @@ internal class PlayerTest {
         player.addTerritoryForTest(Territory("t1"))
         player.addTerritoryForTest(Territory("t1"))
         player.computeTerritorialReinforcementForTest()
-        assertEquals(46, player.getArmyToPlaceNumber())
+        assertEquals(5, player.getArmyToPlaceNumber())
     }
 
     @Test
@@ -107,7 +107,7 @@ internal class PlayerTest {
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
         player.getCombinationReinforcementForTest()
-        assertEquals(48, player.getArmyToPlaceNumber())
+        assertEquals(7, player.getArmyToPlaceNumber())
     }
 
     @RepeatedTest(9)
@@ -135,6 +135,6 @@ internal class PlayerTest {
         player.addTerritoryForTest(territory)
         player.manageReinforcementForTest()
         assertEquals(0, player.getArmyToPlaceNumber())
-        assertEquals(54, territory.armyNumber)
+        assertEquals(13, territory.armyNumber)
     }
 }
