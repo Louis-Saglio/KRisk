@@ -161,6 +161,11 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun fortifyPositionForTest() {
         fortifyPosition()
     }
+
+    @TestOnly
+    fun manageReinforcementForTest() {
+        manageReinforcement()
+    }
 }
 
 private fun List<Card>.getBestCombination() = combinations.filter { it.matches(this) }.maxBy { it.reinforcement }

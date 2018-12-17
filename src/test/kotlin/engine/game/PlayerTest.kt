@@ -123,4 +123,18 @@ internal class PlayerTest {
         assertTrue(territory.armyNumber in setOf(1, 11))
         assertTrue(territory1.armyNumber in setOf(2, 12))
     }
+
+    @Test
+    fun manageReinforcement() {
+        val continent = Continent("ctn", 3, listOf(territory))
+        `when`(engine.world).thenReturn(mock(World::class.java))
+        `when`(engine.world.continents).thenReturn(listOf(continent))
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addTerritoryForTest(territory)
+        player.manageReinforcementForTest()
+        assertEquals(0, player.getArmyToPlaceNumber())
+        assertEquals(54, territory.armyNumber)
+    }
 }
