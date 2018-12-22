@@ -17,4 +17,10 @@ class World(val continents: List<Continent>, val borders: List<Border>) {
     fun getTerritoryByName(name: String?): Territory? {
         return getTerritories().find { it.name == name }
     }
+
+    override fun toString(): String {
+        return continents.joinToString("\n") {
+            "${it.name}\n${it.territories.joinToString { territory -> territory.name }}"
+        }
+    }
 }

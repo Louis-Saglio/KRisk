@@ -2,13 +2,35 @@ package engine
 
 import debug
 
-const val maxInputTryNumber = 100
-fun <T> choose(message: String, ifDebug: () -> String?, cast: (String?) -> T?, isValid: ((T) -> Boolean)? = null): T {
+class InputSuggestion(val value: String, toDisplay: String? = null) {
+    private val toDisplay = toDisplay ?: value
+
+    override fun toString(): String {
+        return toDisplay
+    }
+}
+
+const val maxInputTryNumber = 30
+fun <T> choose(
+    message: String? = null,
+    ifDebug: () -> String?,
+    cast: (String?) -> T?,
+    inputSuggestions: List<InputSuggestion>? = null,
+    isValid: ((T) -> Boolean)? = null
+): T {
+    if (inputSuggestions != null)
+        println("Choose between ${inputSuggestions.filter {
+            val suggestion = cast(it.value)
+            suggestion != null && isValid?.invoke(suggestion) ?: true
+        }}")
     var chosen: T?
     var triedInputNumber = 0
     do {
-        println(message)
+        if (message != null) println(message)
         val input = if (debug) ifDebug() else readLine()
+        if (debug) {
+            println(">>> $input")
+        }
         chosen = cast(input)
         triedInputNumber++
         if (debug && triedInputNumber > maxInputTryNumber)

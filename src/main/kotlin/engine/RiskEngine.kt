@@ -15,6 +15,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     fun setupTerritories() {
         println("RiskEngine.setupTerritories")
+        println(world)
         players.forEachClaimTerritory(world.getTerritories().shuffled())
     }
 
@@ -26,7 +27,17 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             players.getActual().takeIf { it.getArmyToPlaceNumber() > 0 }?.placeOneArmy()
             players.passToNext()
         }
-        debug = false
+        resumePlayerWorldSituation()
+//        debug = false
+    }
+
+    private fun resumePlayerWorldSituation() {
+        println("World situation :")
+        for (player in players) {
+            for (territory in player.getTerritories()) {
+                println("$player $territory")
+            }
+        }
     }
 
     fun playTurns() {
@@ -59,12 +70,6 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     }
 
     companion object {
-//        val initialArmyNumberByPlayerNumber = mapOf(
-//            Pair(3, 35),
-//            Pair(4, 30),
-//            Pair(5, 25),
-//            Pair(6, 20)
-//        )
         val initialArmyNumberByPlayerNumber = mapOf(
             Pair(3, 4),
             Pair(4, 30),
@@ -85,3 +90,5 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 // todo from tert has touces attakable trt
 // todo fortify from territory with more than 1 army
 // todo add logs for fortify position
+// todo make initialArmyNumberByPlayerNumber parametrable
+// todo do not fortify if no border

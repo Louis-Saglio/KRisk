@@ -2,6 +2,7 @@ package engine.game
 
 import engine.RiskEngine
 import engine.choose
+import engine.InputSuggestion
 import engine.game.world.Territory
 import engine.game.world.combinations
 import org.jetbrains.annotations.TestOnly
@@ -125,20 +126,22 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         }
     }
 
-    private fun chooseTerritory(isValid: (Territory) -> Boolean): Territory {
+    private fun chooseTerritory(inputSuggestions: List<Territory>? = null, isValid: (Territory) -> Boolean): Territory {
         println("$this.chooseTerritory")
         return choose(
             message = "Choose territory for $this : ",
             ifDebug = { territories.map { it.name }.random() },
             cast = { engine.world.getTerritoryByName(it) },
-            isValid = isValid
+            isValid = isValid,
+            inputSuggestions = inputSuggestions?.map { InputSuggestion(it.name, it.toString()) }
         )
     }
 
     internal fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
-        println("$this.chooseOwnedTerritory between : $territories")
-        // todo: optimize by searching only in this.territories in the cast function
-        return chooseTerritory { it in territories && if (isValid == null) true else isValid(it) }
+        return chooseTerritory(
+            isValid = { it in territories && if (isValid == null) true else isValid(it) },
+            inputSuggestions = territories
+        )
     }
 
     fun chooseTargetToAttackFrom(from: Territory): Territory {
@@ -148,7 +151,13 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             } && it !in territories && it.armyNumber > 1
         }
         println("$this.chooseTargetToAttackFrom $from between $possibleTargets")
-        return chooseTerritory { it in possibleTargets }
+        return choose(
+            isValid = { it in possibleTargets },
+            inputSuggestions = possibleTargets.map { InputSuggestion(it.name, it.toString()) },
+            message = "Choose territory to attack from $from",
+            cast = { possibleTargets.find { territory -> territory.name == it } },
+            ifDebug = { possibleTargets.random().name }
+        )
     }
 
     private fun chooseArmyNumberToTransferFrom(origin: Territory): Int {
@@ -164,9 +173,9 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     private fun chooseOwnedCard(): Card {
         println("$this.chooseOwnedCard")
         return choose(
-            message = "Choose a card between ${cards.joinToString()}",
             ifDebug = { cards.map { it.territory.name }.random() },
-            cast = { cards.find { card -> card.territory.name == it } }
+            cast = { cards.find { card -> card.territory.name == it } },
+            inputSuggestions = cards.map { InputSuggestion(it.territory.name, it.territory.toString()) }
         )
     }
 
