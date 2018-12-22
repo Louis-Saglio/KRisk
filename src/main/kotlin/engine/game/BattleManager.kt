@@ -16,13 +16,18 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
 
     private fun fightOneTurn() {
         println("BattleManager.fightOneTurn")
-        val attackerDices = rollDices(attacker.player.chooseDiceNumberForAttackFrom(attacker.territory))
+        val attackerDiceNbr = attacker.player.chooseDiceNumberForAttackFrom(attacker.territory)
+        val attackerDices = rollDices(attackerDiceNbr)
         val defenderDices = rollDices(defender.player.chooseDiceNumberForDefenceOf(defender.territory))
         val result = compareDices(attackerDices, defenderDices)
         println("result $result")
         attacker.territory.increaseArmyNumber(-result.attackerDeaths)
         defender.territory.increaseArmyNumber(-result.defenderDeath)
         println("Attacker : ${attacker.territory}, defender : ${defender.territory}")
+        if (defender.territory.armyNumber == 0) {
+            println("${attacker.player} capturate ${defender.territory} from ${defender.player}")
+            attacker.player.captureTerritory(attacker.territory, defender.territory, attackerDiceNbr)
+        }
     }
 
     private fun continueFight() =
@@ -44,7 +49,7 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
 
     private fun compareDices(attackerDices: List<Int>, defenderDices: List<Int>): DiceComparisonResult {
         println("BattleManager.compareDices")
-        println("attackerDices = [$attackerDices], defenderDices = [$defenderDices]")
+        println("attackerDices = $attackerDices, defenderDices = $defenderDices")
         val dices = (attackerDices.sortedDescending() zip defenderDices.sortedDescending())
         var attackerDeaths = 0
         var defenderDeaths = 0

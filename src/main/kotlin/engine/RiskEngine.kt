@@ -1,5 +1,6 @@
 package engine
 
+import debug
 import engine.game.BattleManager
 import engine.game.Player
 import engine.game.PlayerTerritory
@@ -19,11 +20,13 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     fun placeInitialArmies() {
         println("RiskEngine.placeInitialArmies")
+        debug = true
         players.setToFirst()
         while (players.any { it.getArmyToPlaceNumber() > 0 }) {
             players.getActual().takeIf { it.getArmyToPlaceNumber() > 0 }?.placeOneArmy()
             players.passToNext()
         }
+        debug = false
     }
 
     fun playTurns() {
@@ -53,8 +56,6 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         )
         println("$player attacks $target of ${defender.player} with $from")
         BattleManager(attacker, defender).fight()
-
-        player.fortifyPosition()
     }
 
     companion object {
@@ -82,4 +83,5 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 // todo 2 reinfo combi
 // todo attacker 0 dice
 // todo from tert has touces attakable trt
-// todo capture target
+// todo fortify from territory with more than 1 army
+// todo add logs for fortify position

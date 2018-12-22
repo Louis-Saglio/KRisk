@@ -42,6 +42,19 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         territory.increaseArmyNumber(1)
     }
 
+    fun captureTerritory(from: Territory, to: Territory, minimum: Int = 0) {
+        val nbr = choose(
+            message = "Choose army number to move from $from to $to between $minimum and ${from.armyNumber - 1}",
+            ifDebug = { (minimum..(from.armyNumber)).random().toString() },
+            cast = { it?.toIntOrNull() },
+            isValid = { it in (minimum..(from.armyNumber)) }
+        )
+        territories.add(to)
+        println("$this.move $nbr armies from $from to $to")
+        from.increaseArmyNumber(-nbr)
+        to.increaseArmyNumber(nbr)
+    }
+
     override fun toString(): String {
         return "Player($name)"
     }
@@ -132,14 +145,10 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         val possibleTargets = engine.world.getTerritories().filter {
             engine.world.borders.any {
                     border -> setOf(border.territory1, border.territory2) == setOf(from, it)
-            } && it !in territories
+            } && it !in territories && it.armyNumber > 1
         }
         println("$this.chooseTargetToAttackFrom $from between $possibleTargets")
-        return chooseTerritory {
-            engine.world.borders.any {
-                    border -> setOf(border.territory1, border.territory2) == setOf(from, it)
-            } && it !in territories
-        }
+        return chooseTerritory { it in possibleTargets }
     }
 
     private fun chooseArmyNumberToTransferFrom(origin: Territory): Int {
@@ -147,7 +156,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         return choose(
             message = "Choose a number between 0 and ${origin.armyNumber - 1}",
             ifDebug = { "5" },
-            cast = { it?.toInt() },
+            cast = { it?.toIntOrNull() },
             isValid = { it in 0 until origin.armyNumber }
         )
     }
@@ -162,7 +171,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun owns(target: Territory): Boolean {
-        println("$this.owns")
+        println("$this.owns $target")
         return territories.contains(target)
     }
 
@@ -171,17 +180,17 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         return choose(
             message = "Choose dice number. max :  ${min(from.armyNumber - 1, 3)}",
             ifDebug = { (1..min(from.armyNumber - 1, 3)).random().toString() },
-            cast = { it?.toInt() },
+            cast = { it?.toIntOrNull() },
             isValid = { it in 1..min(from.armyNumber - 1, 3) }
         )
     }
 
     fun chooseDiceNumberForDefenceOf(territory: Territory): Int {
-        println("$this.chooseDiceNumberForDefenceOf")
+        println("$this.chooseDiceNumberForDefenceOf $territory")
         return choose(
             message = "Choose dice number. max :  ${min(territory.armyNumber, 2)}",
             ifDebug = { (1..min(territory.armyNumber, 2)).random().toString() },
-            cast = { it?.toInt() },
+            cast = { it?.toIntOrNull() },
             isValid = { it in 1..min(territory.armyNumber, 2) }
         )
     }
