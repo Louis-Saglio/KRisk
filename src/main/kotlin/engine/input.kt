@@ -14,5 +14,21 @@ fun <T> choose(message: String, ifDebug: () -> String?, cast: (String?) -> T?, i
         if (debug && triedInputNumber > maxInputTryNumber)
             throw RuntimeException("Too many input tried")
     } while (chosen == null || if (isValid!=null) !isValid(chosen) else false)
+    println("chosen $chosen")
     return chosen
+}
+
+fun chooseYesOrNo(message: String): Boolean {
+    println("chooseYesOrNo")
+    return choose(
+        "$message : yes/no",
+        { setOf("yes", "no").random() },
+        {
+            when (it?.toLowerCase()) {
+                "yes" -> true
+                "no" -> false
+                else -> null
+            }
+        }
+    )
 }

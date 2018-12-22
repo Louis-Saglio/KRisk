@@ -46,4 +46,6 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
         }
     }
 
+    fun getPlayerByTerritory(target: Territory)= find { it.owns(target) }
+
 }

@@ -8,4 +8,5 @@ fun main(args: Array<String>) {
     val engine = RiskEngine(buildWorld(), p1, p2, p3)
     engine.setupTerritories()
     engine.placeInitialArmies()
+    engine.playTurns()
 }
