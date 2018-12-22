@@ -3,6 +3,10 @@ package engine.game
 abstract class Combination {
     abstract val reinforcement: Int
     abstract fun matches(cards: List<Card>): Boolean
+
+    override fun toString(): String {
+        return this.javaClass.simpleName
+    }
 }
 
 object ThreeInfantries: Combination() {

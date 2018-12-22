@@ -21,7 +21,12 @@ internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArr
         this.addAll(names.map { Player(engine, it, armyNumberToPlace) })
     }
 
-    fun getActual() = get(currentIndex)
+    fun getActual(): Player {
+        println("--------------------------------")
+        val player = get(currentIndex)
+        println(player)
+        return player
+    }
 
     private fun getNextIndex() = (currentIndex + 1) % size
 

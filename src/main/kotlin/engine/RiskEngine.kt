@@ -29,7 +29,6 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     fun playTurns() {
         do {
             val playingPlayer = players.getActual()
-            println("Au tour de $playingPlayer")
             playingPlayer.manageReinforcement()
 
             do {
@@ -44,6 +43,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     private fun playerAttacksOneTerritory(player: Player) {
         println("RiskEngine.playerAttacksOneTerritory")
+        println("choose territory to attack from")
         val from = player.chooseOwnedTerritory { it.armyNumber >= 2 }
         val target = player.chooseTargetToAttackFrom(from)
         val attacker = PlayerTerritory(player, from)
@@ -58,8 +58,14 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     }
 
     companion object {
+//        val initialArmyNumberByPlayerNumber = mapOf(
+//            Pair(3, 35),
+//            Pair(4, 30),
+//            Pair(5, 25),
+//            Pair(6, 20)
+//        )
         val initialArmyNumberByPlayerNumber = mapOf(
-            Pair(3, 35),
+            Pair(3, 4),
             Pair(4, 30),
             Pair(5, 25),
             Pair(6, 20)
@@ -73,3 +79,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     internal fun getTerritoriesForTest() = world.getTerritories()
 
 }
+// todo 2 reinfo combi
+// todo attacker 0 dice
+// todo from tert has touces attakable trt
+// todo capture target

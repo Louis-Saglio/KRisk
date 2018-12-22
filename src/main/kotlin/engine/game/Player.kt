@@ -11,6 +11,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     private var armyToPlaceNumber = armyToPlaceNumber
         set(value) {
+            println("armyToPlaceNumber : from $field to $value")
             if (value >= 0) field = value
             else throw RuntimeException("Can't set negative armyToPlaceNumber")
         }
@@ -24,8 +25,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
      * Add territory to the owned territories list and place one army on it
      */
     fun claimTerritory(territory: Territory) {
-        println("Player.claimTerritory $this")
-        println("territory = [$territory]")
+        println("$this.claimTerritory $territory")
         if (territory.armyNumber > 0)
             throw RuntimeException("$this can't claim terrytory $territory because it is already owned")
         territories.add(territory)
@@ -36,8 +36,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
      * Take an army from the armyToPlaceNumber reserve and place it on territory
      */
     private fun placeOneArmyOn(territory: Territory) {
-        println("Player.placeOneArmyOn $this")
-        println("territory = [$territory]")
+        println("$this.placeOneArmyOn $territory")
         if (territory !in territories) throw RuntimeException("Can't add army to not owned territory")
         armyToPlaceNumber -= 1
         territory.increaseArmyNumber(1)
@@ -52,6 +51,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
      */
     fun placeOneArmy() {
         println("$this.placeOneArmy")
+        println("Armée restante : $armyToPlaceNumber")
         val territory = chooseOwnedTerritory()
         placeOneArmyOn(territory)
     }
@@ -93,7 +93,8 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     private fun getCombinationReinforcement() {
         println("$this.getCombinationReinforcement")
-        armyToPlaceNumber += (1..3).map { chooseOwnedCard() }.getBestCombination()?.reinforcement ?: 0
+        if (cards.getBestCombination() != null)
+            armyToPlaceNumber += (1..3).map { chooseOwnedCard() }.getBestCombination()?.reinforcement ?: 0
     }
 
     private fun computeTerritorialReinforcement() {
@@ -122,15 +123,23 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     internal fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
-        println("$this.chooseOwnedTerritory")
+        println("$this.chooseOwnedTerritory between : $territories")
         // todo: optimize by searching only in this.territories in the cast function
         return chooseTerritory { it in territories && if (isValid == null) true else isValid(it) }
     }
 
-    fun chooseTargetToAttackFrom(from: Territory) = chooseTerritory {
-        println("$this.chooseTargetToAttackFrom")
-        engine.world.borders.any { border -> setOf(border.territory1, border.territory2) == setOf(from, it) }
-                && it !in territories
+    fun chooseTargetToAttackFrom(from: Territory): Territory {
+        val possibleTargets = engine.world.getTerritories().filter {
+            engine.world.borders.any {
+                    border -> setOf(border.territory1, border.territory2) == setOf(from, it)
+            } && it !in territories
+        }
+        println("$this.chooseTargetToAttackFrom $from between $possibleTargets")
+        return chooseTerritory {
+            engine.world.borders.any {
+                    border -> setOf(border.territory1, border.territory2) == setOf(from, it)
+            } && it !in territories
+        }
     }
 
     private fun chooseArmyNumberToTransferFrom(origin: Territory): Int {
@@ -158,7 +167,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun chooseDiceNumberForAttackFrom(from: Territory): Int {
-        println("$this.chooseDiceNumberForAttackFrom")
+        println("$this.chooseDiceNumberForAttackFrom $from")
         return choose(
             message = "Choose dice number. max :  ${min(from.armyNumber - 1, 3)}",
             ifDebug = { (1..min(from.armyNumber - 1, 3)).random().toString() },
@@ -170,21 +179,20 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun chooseDiceNumberForDefenceOf(territory: Territory): Int {
         println("$this.chooseDiceNumberForDefenceOf")
         return choose(
-            message = "Choose dice number. max :  ${min(territory.armyNumber, 3)}",
+            message = "Choose dice number. max :  ${min(territory.armyNumber, 2)}",
             ifDebug = { (1..min(territory.armyNumber, 2)).random().toString() },
             cast = { it?.toInt() },
             isValid = { it in 1..min(territory.armyNumber, 2) }
         )
     }
 
+    fun getTerritories() = territories
+
     //<editor-fold desc="TestOnly">
     @TestOnly
     fun addTerritoryForTest(territory: Territory) {
         territories.add(territory)
     }
-
-    @TestOnly
-    fun getTerritoriesForTest() = territories
 
     @TestOnly
     fun computeContinentalReinforcementForTest() {

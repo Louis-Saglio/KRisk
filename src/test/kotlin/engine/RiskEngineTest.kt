@@ -36,7 +36,7 @@ internal class RiskEngineTest {
         engine.setupTerritories()
         players.forEach {
             assertTrue(it.getArmyToPlaceNumber() in 33..34)
-            assertTrue(it.getTerritoriesForTest().size in 1..2)
+            assertTrue(it.getTerritories().size in 1..2)
         }
         engine.getTerritoriesForTest().forEach { kotlin.test.assertEquals(1, it.armyNumber, it.name) }
     }
@@ -48,7 +48,7 @@ internal class RiskEngineTest {
         engine.placeInitialArmies()
         players.forEach { assertEquals(0, it.getArmyToPlaceNumber()) }
         players.forEach {
-            assertEquals(it.getTerritoriesForTest().sumBy { territory -> territory.armyNumber }, 35)
+            assertEquals(it.getTerritories().sumBy { territory -> territory.armyNumber }, 35)
         }
     }
 }

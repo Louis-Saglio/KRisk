@@ -92,6 +92,35 @@ fun buildWorld(): World {
     )
 }
 
+fun buildSimpleWorld(): World {
+    val europeDuSud = Territory("Europe-du-Sud")
+    val europeDeLOuest = Territory("Europe-Occidentale")
+    val europeDuNord = Territory("Europe-du-Nord")
+    val grandeBretagne = Territory("Grande-Bretagne")
+    val islande = Territory("Islande")
+    val ukraine = Territory("Ukraine")
+    val scandinavie = Territory("Scandinavie")
+    return World(
+        listOf(
+            Continent("Ouest", 3, listOf(europeDeLOuest, grandeBretagne, islande, europeDuNord)),
+            Continent("Est", 2, listOf(europeDuSud, ukraine, scandinavie))
+        ),
+        listOf(
+            Border(europeDuSud, europeDeLOuest),
+            Border(europeDuNord, europeDeLOuest),
+            Border(europeDuNord, scandinavie),
+            Border(europeDuNord, europeDuSud),
+            Border(europeDuSud, ukraine),
+            Border(ukraine, scandinavie),
+            Border(ukraine, europeDuNord),
+            Border(grandeBretagne, europeDeLOuest),
+            Border(grandeBretagne, islande),
+            Border(islande, scandinavie),
+            Border(grandeBretagne, scandinavie)
+        )
+    )
+}
+
 val combinations = setOf(
     ThreeInfantries,
     ThreeCavalries,
