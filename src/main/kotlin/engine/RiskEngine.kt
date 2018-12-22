@@ -71,7 +71,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     companion object {
         val initialArmyNumberByPlayerNumber = mapOf(
-            Pair(3, 4),
+            Pair(3, 35),
             Pair(4, 30),
             Pair(5, 25),
             Pair(6, 20)
@@ -86,9 +86,9 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
 }
 // todo 2 reinfo combi
-// todo attacker 0 dice
-// todo from tert has touces attakable trt
 // todo fortify from territory with more than 1 army
 // todo add logs for fortify position
 // todo make initialArmyNumberByPlayerNumber parametrable
 // todo do not fortify if no border
+// todo get card when win a new territory once by turn
+// todo manage first input suggestion taking in account possible input existence for second input

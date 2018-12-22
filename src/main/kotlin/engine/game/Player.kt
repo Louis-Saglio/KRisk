@@ -80,12 +80,23 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     internal fun fortifyPosition() {
         println("$this.fortifyPosition")
-        val firstTerritory = chooseOwnedTerritory()
-        val secondTerritory = chooseOwnedTerritory {
+        val firstTerritory = chooseOwnedTerritory { it.armyNumber > 1 }
+        val possibleDestinations = territories.filter {
             engine.world.borders.any {
                     border -> setOf(border.territory1, border.territory2) == setOf(firstTerritory, it)
             }
         }
+        if (possibleDestinations.isEmpty()) {
+            println("Aucune destination possible")
+            return
+        }
+        val secondTerritory = choose(
+            message = null,
+            ifDebug = { possibleDestinations.random().name },
+            cast = { possibleDestinations.find { territory -> territory.name == it }},
+            isValid = { it in possibleDestinations },
+            inputSuggestions = possibleDestinations.map { InputSuggestion(it.name, it.toString()) }
+        )
         val armyNumber = chooseArmyNumberToTransferFrom(firstTerritory)
         firstTerritory.armyNumber -= armyNumber
         secondTerritory.armyNumber += armyNumber
@@ -164,7 +175,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         println("$this.chooseArmyNumberToTransferFrom")
         return choose(
             message = "Choose a number between 0 and ${origin.armyNumber - 1}",
-            ifDebug = { "5" },
+            ifDebug = { (0 until origin.armyNumber).random().toString() },
             cast = { it?.toIntOrNull() },
             isValid = { it in 0 until origin.armyNumber }
         )
@@ -180,8 +191,9 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun owns(target: Territory): Boolean {
-        println("$this.owns $target")
-        return territories.contains(target)
+        val contains = territories.contains(target)
+        println("$this.owns $target : $contains")
+        return contains
     }
 
     fun chooseDiceNumberForAttackFrom(from: Territory): Int {
