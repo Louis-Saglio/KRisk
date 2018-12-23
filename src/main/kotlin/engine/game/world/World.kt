@@ -18,6 +18,10 @@ class World(val continents: List<Continent>, val borders: List<Border>) {
         return getTerritories().find { it.name == name }
     }
 
+    fun areNeighbours(territory1: Territory, territory2: Territory): Boolean {
+        return borders.any { setOf(it.territory1, it.territory2) == setOf(territory1, territory2) }
+    }
+
     override fun toString(): String {
         return continents.joinToString("\n") {
             "${it.name}\n${it.territories.joinToString { territory -> territory.name }}"

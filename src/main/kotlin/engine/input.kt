@@ -10,7 +10,7 @@ class InputSuggestion(val value: String, toDisplay: String? = null) {
     }
 }
 
-const val maxInputTryNumber = 30
+const val maxInputTryNumber = 100
 fun <T> choose(
     message: String? = null,
     ifDebug: () -> String?,
@@ -26,6 +26,8 @@ fun <T> choose(
     var chosen: T?
     var triedInputNumber = 0
     do {
+        if (debug && triedInputNumber > maxInputTryNumber)
+            throw RuntimeException("Too many input tried")
         if (message != null) println(message)
         val input = if (debug) ifDebug() else readLine()
         if (debug) {
@@ -33,8 +35,6 @@ fun <T> choose(
         }
         chosen = cast(input)
         triedInputNumber++
-        if (debug && triedInputNumber > maxInputTryNumber)
-            throw RuntimeException("Too many input tried")
     } while (chosen == null || if (isValid!=null) !isValid(chosen) else false)
     println("chosen $chosen")
     return chosen

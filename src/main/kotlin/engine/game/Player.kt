@@ -46,7 +46,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun captureTerritory(from: Territory, to: Territory, minimum: Int = 0) {
         val nbr = choose(
             message = "Choose army number to move from $from to $to between $minimum and ${from.armyNumber - 1}",
-            ifDebug = { (minimum..(from.armyNumber)).random().toString() },
+            ifDebug = { (minimum until (from.armyNumber)).random().toString() },
             cast = { it?.toIntOrNull() },
             isValid = { it in (minimum..(from.armyNumber)) }
         )
@@ -80,18 +80,17 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     internal fun fortifyPosition() {
         println("$this.fortifyPosition")
-        val firstTerritory = chooseOwnedTerritory { it.armyNumber > 1 }
-        val possibleDestinations = territories.filter {
-            engine.world.borders.any {
-                    border -> setOf(border.territory1, border.territory2) == setOf(firstTerritory, it)
-            }
+        val possibleSources = territories.filter {
+            it.armyNumber > 1 && territories.any {territory -> engine.world.areNeighbours(it, territory) }
         }
-        if (possibleDestinations.isEmpty()) {
-            println("Aucune destination possible")
+        if (possibleSources.isEmpty()) {
+            println("No fortification possible")
             return
         }
+        val firstTerritory = chooseOwnedTerritory { it.armyNumber > 1 && it in possibleSources }
+        val possibleDestinations = territories.filter { engine.world.areNeighbours(it, firstTerritory) }
         val secondTerritory = choose(
-            message = null,
+            message = "Choose territory to fortify",
             ifDebug = { possibleDestinations.random().name },
             cast = { possibleDestinations.find { territory -> territory.name == it }},
             isValid = { it in possibleDestinations },
@@ -148,18 +147,34 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         )
     }
 
-    internal fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
+    private fun chooseOwnedTerritory(isValid: ((Territory) -> Boolean)? = null): Territory {
         return chooseTerritory(
             isValid = { it in territories && if (isValid == null) true else isValid(it) },
             inputSuggestions = territories
         )
     }
 
+    fun chooseTerritoryToAttackFrom(): Territory? {
+        println("$this.chooseTerritoryToAttackFrom")
+        val possibleTerritories = territories.filter {
+            it.armyNumber >= 2
+                    && engine.world.getTerritories().any {
+                    territory -> territory !in territories && engine.world.areNeighbours(it, territory)
+            }
+        }
+        if (possibleTerritories.isEmpty()) return null
+        return choose(
+            message = "$this choose territory to attack from",
+            ifDebug = { possibleTerritories.random().name },
+            isValid = { it in possibleTerritories },
+            cast = { possibleTerritories.find { territory -> it == territory.name } },
+            inputSuggestions = possibleTerritories.map { InputSuggestion(it.name, it.toString()) }
+        )
+    }
+
     fun chooseTargetToAttackFrom(from: Territory): Territory {
         val possibleTargets = engine.world.getTerritories().filter {
-            engine.world.borders.any {
-                    border -> setOf(border.territory1, border.territory2) == setOf(from, it)
-            } && it !in territories && it.armyNumber > 1
+            engine.world.areNeighbours(it, from) && it !in territories
         }
         println("$this.chooseTargetToAttackFrom $from between $possibleTargets")
         return choose(
