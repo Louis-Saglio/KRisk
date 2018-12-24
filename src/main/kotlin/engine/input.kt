@@ -10,7 +10,7 @@ class InputSuggestion(val value: String, toDisplay: String? = null) {
     }
 }
 
-const val maxInputTryNumber = 100
+const val maxInputTryNumber = 20
 fun <T> choose(
     message: String? = null,
     ifDebug: () -> String?,
@@ -18,6 +18,7 @@ fun <T> choose(
     inputSuggestions: List<InputSuggestion>? = null,
     isValid: ((T) -> Boolean)? = null
 ): T {
+    // todo : replace ifDebug by random input suggestion
     if (inputSuggestions != null)
         println("Choose between ${inputSuggestions.filter {
             val suggestion = cast(it.value)

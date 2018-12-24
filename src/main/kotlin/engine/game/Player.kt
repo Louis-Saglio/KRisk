@@ -1,8 +1,8 @@
 package engine.game
 
+import engine.InputSuggestion
 import engine.RiskEngine
 import engine.choose
-import engine.InputSuggestion
 import engine.game.world.Territory
 import engine.game.world.combinations
 import org.jetbrains.annotations.TestOnly
@@ -21,6 +21,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     private val territories = mutableListOf<Territory>()
     private val cards = mutableListOf<Card>()
+    var hasConqueredTerritory = false
 
     /**
      * Add territory to the owned territories list and place one army on it
@@ -51,6 +52,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             isValid = { it in (minimum..(from.armyNumber)) }
         )
         territories.add(to)
+        hasConqueredTerritory = true
         println("$this.move $nbr armies from $from to $to")
         from.increaseArmyNumber(-nbr)
         to.increaseArmyNumber(nbr)
@@ -117,8 +119,46 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     private fun getCombinationReinforcement() {
         println("$this.getCombinationReinforcement")
-        if (cards.getBestCombination() != null)
-            armyToPlaceNumber += (1..3).map { chooseOwnedCard() }.getBestCombination()?.reinforcement ?: 0
+        val possibleSetsOfCard = getAllPossibleSetOfThreeOwnedCards().filter {
+            combinations.any { combination -> combination.matches(it) }
+        }
+        if (possibleSetsOfCard.isEmpty()) {
+            println("$this has no combination")
+            return
+        }
+        val chosenCards = mutableListOf<Card>()
+        repeat(3) {
+            val card = choose(
+                "choose card $it",
+                { possibleSetsOfCard.random().random().territory.name },
+                { input -> cards.find { card -> card.territory.name == input } },
+                possibleSetsOfCard.flatten().map { card -> InputSuggestion(card.territory.name, card.toString()) },
+                { card -> possibleSetsOfCard.any { setOfCard -> setOfCard.containsAll(chosenCards) && setOfCard.contains(card) } && card !in chosenCards }
+            )
+            chosenCards.add(card)
+        }
+        val combination = chosenCards.getBestCombination() ?: throw RuntimeException("No combination in a valid set of card")
+        println("$this got $combination")
+        engine.cards.addAll(chosenCards)
+        cards.removeAll(chosenCards)
+        armyToPlaceNumber += combination.reinforcement
+    }
+
+    private fun getAllPossibleSetOfThreeOwnedCards(): Set<Set<Card>> {
+        val answer = mutableSetOf<Set<Card>>()
+        for (card1 in cards) {
+            for (card2 in cards) {
+                for (card3 in cards) {
+                    if (card3 !in setOf(card1, card2)) {
+                        val set = setOf(card1, card2, card3)
+                        if (set.size == 3) {
+                            answer.add(set)
+                        }
+                    }
+                }
+            }
+        }
+        return answer
     }
 
     private fun computeTerritorialReinforcement() {
@@ -134,6 +174,11 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
                 armyToPlaceNumber += continent.reinforcements
             }
         }
+    }
+
+    internal fun addCard(card: Card) {
+        println("$this.addCard $card")
+        cards.add(card)
     }
 
     private fun chooseTerritory(inputSuggestions: List<Territory>? = null, isValid: (Territory) -> Boolean): Territory {
@@ -176,7 +221,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         val possibleTargets = engine.world.getTerritories().filter {
             engine.world.areNeighbours(it, from) && it !in territories
         }
-        println("$this.chooseTargetToAttackFrom $from between $possibleTargets")
+        println("$this.chooseTargetToAttackFrom $from")
         return choose(
             isValid = { it in possibleTargets },
             inputSuggestions = possibleTargets.map { InputSuggestion(it.name, it.toString()) },
@@ -193,15 +238,6 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             ifDebug = { (0 until origin.armyNumber).random().toString() },
             cast = { it?.toIntOrNull() },
             isValid = { it in 0 until origin.armyNumber }
-        )
-    }
-
-    private fun chooseOwnedCard(): Card {
-        println("$this.chooseOwnedCard")
-        return choose(
-            ifDebug = { cards.map { it.territory.name }.random() },
-            cast = { cards.find { card -> card.territory.name == it } },
-            inputSuggestions = cards.map { InputSuggestion(it.territory.name, it.territory.toString()) }
         )
     }
 
@@ -268,12 +304,20 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     fun manageReinforcementForTest() {
         manageReinforcement()
     }
+
+    @TestOnly
+    fun getAllPossibleSetOfThreeOwnedCardsForTest() = getAllPossibleSetOfThreeOwnedCards()
     //</editor-fold>
 }
 
 private fun List<Card>.getBestCombination(): Combination? {
     println("$this.getBestCombination")
-    val combination = combinations.filter { it.matches(this) }.maxBy { it.reinforcement }
+    val combination = getAllCombinations().maxBy { it.reinforcement }
     println("Best combination : $combination")
     return combination
+}
+
+private fun Collection<Card>.getAllCombinations(): List<Combination> {
+    println("$this.getAllCombinations")
+    return combinations.filter { it.matches(this) }
 }

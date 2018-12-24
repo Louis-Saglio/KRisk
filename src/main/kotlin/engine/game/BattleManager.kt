@@ -34,8 +34,9 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
         attacker.territory.armyNumber > 1 && defender.territory.armyNumber > 0 && chooseYesOrNo("Continue fight ?")
 
     fun fight() {
-        println("BattleManager.fight")
+        println("${attacker.player} attacks ${defender.territory} of ${defender.player} with ${attacker.territory}")
         do {
+            // todo stop if no more capturable territories
             fightOneTurn()
         } while (continueFight())
     }

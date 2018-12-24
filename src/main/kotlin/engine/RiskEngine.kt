@@ -1,10 +1,7 @@
 package engine
 
 import debug
-import engine.game.BattleManager
-import engine.game.Player
-import engine.game.PlayerTerritory
-import engine.game.Players
+import engine.game.*
 import engine.game.world.World
 import org.jetbrains.annotations.TestOnly
 
@@ -12,6 +9,7 @@ import org.jetbrains.annotations.TestOnly
 class RiskEngine(val world: World, vararg playerNames: String) {
 
     private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), *playerNames)
+    val cards = world.getTerritories().map { Card(it, Symbol.values().random()) }.shuffled().toMutableList()
 
     fun setupTerritories() {
         println("RiskEngine.setupTerritories")
@@ -41,22 +39,37 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     }
 
     fun playTurns() {
+        var turnNumber = 0
         var somebodyHasWon: Boolean
         do {
+            turnNumber++
+            println("Turn $turnNumber start")
             val playingPlayer = players.getActual()
             playingPlayer.manageReinforcement()
 
+            playingPlayer.hasConqueredTerritory = false
             var attackIsPossible: Boolean
             do {
                 attackIsPossible = playerAttacksOneTerritory(playingPlayer)
             } while (attackIsPossible && chooseYesOrNo("Continue attack ?"))
 
+            if (playingPlayer.hasConqueredTerritory && cards.isNotEmpty()) {
+                val card = cards[cards.size - 1]
+                cards.remove(card)
+                playingPlayer.addCard(card)
+            } else if (!playingPlayer.hasConqueredTerritory) {
+                println("$playingPlayer didn't conquer a territory")
+            } else if (cards.isEmpty()) {
+                println("No more card to give")
+            }
             playingPlayer.fortifyPosition()
             somebodyHasWon = players.any(Player::hasWon)
+            println("Turn $turnNumber end")
             if (somebodyHasWon) break
             players.passToNext()
         } while (true)
         println("${players.getActual()} wins the game")
+        println(players.getActual().getTerritories())
     }
 
     private fun playerAttacksOneTerritory(player: Player): Boolean {
@@ -72,7 +85,6 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             players.getPlayerByTerritory(target) ?: throw RuntimeException("Nobody owns $target"),
             target
         )
-        println("$player attacks $target of ${defender.player} with $from")
         BattleManager(attacker, defender).fight()
         return true
     }
@@ -95,6 +107,4 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 }
 // todo 2 reinfo combi
 // todo make initialArmyNumberByPlayerNumber parametrable
-// todo do not fortify if no border
 // todo get card when win a new territory once by turn
-// todo manage first input suggestion taking in account possible input existence for second input

@@ -2,10 +2,7 @@ package engine.game
 
 import debug
 import engine.RiskEngine
-import engine.game.world.Border
-import engine.game.world.Continent
-import engine.game.world.Territory
-import engine.game.world.World
+import engine.game.world.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
@@ -108,9 +105,13 @@ internal class PlayerTest {
 
     @Test
     fun getCombinationReinforcement() {
+        val territory1 = Territory("1")
+        player.addTerritoryForTest(territory1)
+        val territory2 = Territory("2")
+        player.addTerritoryForTest(territory2)
         player.addCardForTest(Card(territory, Symbol.CAVALRY))
-        player.addCardForTest(Card(territory, Symbol.CAVALRY))
-        player.addCardForTest(Card(territory, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory1, Symbol.CAVALRY))
+        player.addCardForTest(Card(territory2, Symbol.CAVALRY))
         player.getCombinationReinforcementForTest()
         assertEquals(7, player.getArmyToPlaceNumber())
     }
@@ -144,5 +145,26 @@ internal class PlayerTest {
         player.manageReinforcementForTest()
         assertEquals(0, player.getArmyToPlaceNumber())
         assertEquals(13, territory.armyNumber)
+    }
+
+    @Test
+    fun getAllPossibleSetOfThreeOwnedCards() {
+        val card1 = Card(territory, Symbol.INFANTRY)
+        val card2 = Card(territory, Symbol.CAVALRY)
+        val card3 = Card(territory, Symbol.ARTILLERY)
+        val card4 = Card(territory, Symbol.INFANTRY)
+        player.addCard(card1)
+        player.addCard(card2)
+        player.addCard(card3)
+        player.addCard(card4)
+        val solution = setOf(
+            setOf(card1, card2, card3),
+            setOf(card1, card2, card4),
+            setOf(card1, card3, card4),
+            setOf(card2, card3, card4)
+        )
+        player.getAllPossibleSetOfThreeOwnedCardsForTest().forEach {
+            assertTrue(it in solution)
+        }
     }
 }
