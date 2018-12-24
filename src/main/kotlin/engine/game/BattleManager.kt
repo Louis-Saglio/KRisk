@@ -14,7 +14,7 @@ private class DiceComparisonResult(val attackerDeaths: Int, val defenderDeath: I
 internal class BattleManager(private val attacker: PlayerTerritory, private val defender: PlayerTerritory) {
     private val diceFaceNbr = 6
 
-    private fun fightOneTurn() {
+    private fun fightOneTurn(): Boolean {
         println("BattleManager.fightOneTurn")
         val attackerDiceNbr = attacker.player.chooseDiceNumberForAttackFrom(attacker.territory)
         val attackerDices = rollDices(attackerDiceNbr)
@@ -27,18 +27,20 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
         if (defender.territory.armyNumber == 0) {
             println("${attacker.player} capturate ${defender.territory} from ${defender.player}")
             attacker.player.captureTerritory(attacker.territory, defender.territory, attackerDiceNbr)
+            return true
         }
+        return false
     }
 
     private fun continueFight() =
         attacker.territory.armyNumber > 1 && defender.territory.armyNumber > 0 && chooseYesOrNo("Continue fight ?")
 
     fun fight() {
-        println("${attacker.player} attacks ${defender.territory} of ${defender.player} with ${attacker.territory}")
+        var territoryIsCaptured: Boolean
         do {
             // todo stop if no more capturable territories
-            fightOneTurn()
-        } while (continueFight())
+            territoryIsCaptured = fightOneTurn()
+        } while (!territoryIsCaptured && continueFight())
     }
 
     private fun rollDices(diceNbr: Int): List<Int> {
