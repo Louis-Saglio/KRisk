@@ -105,6 +105,4 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     internal fun getTerritoriesForTest() = world.getTerritories()
 
 }
-// todo 2 reinfo combi
 // todo make initialArmyNumberByPlayerNumber parametrable
-// todo get card when win a new territory once by turn

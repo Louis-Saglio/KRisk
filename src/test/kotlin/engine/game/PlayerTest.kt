@@ -149,7 +149,7 @@ internal class PlayerTest {
         player.addCardForTest(Card(territory2, Symbol.CAVALRY))
         player.manageReinforcementForTest()
         assertEquals(0, player.getArmyToPlaceNumber())
-        assertEquals(13, territory.armyNumber)
+        assertEquals(15, territory.armyNumber)
     }
 
     @Test

@@ -139,6 +139,9 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         }
         val combination = chosenCards.getBestCombination() ?: throw RuntimeException("No combination in a valid set of card")
         println("$this got $combination")
+        chosenCards.forEach {
+            it.territory.increaseArmyNumber(2)
+        }
         engine.cards.addAll(chosenCards)
         cards.removeAll(chosenCards)
         armyToPlaceNumber += combination.reinforcement
