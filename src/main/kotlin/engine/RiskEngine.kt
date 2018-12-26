@@ -44,6 +44,9 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             println("Turn $turnNumber start")
             val playingPlayer = players.getActual()
             if (!playingPlayer.isDefeated()) {
+                println("card stack : $cards")
+                players.forEach { println("$it : ${it.getCardsForTestTmp()}, ${it.getTerritories().isNotEmpty()}") }
+                // todo bug defeated player has card
                 playingPlayer.manageReinforcement()
 
                 playingPlayer.hasConqueredTerritory = false
@@ -72,6 +75,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         } while (true)
         println("${players.getActual()} wins the game")
         println(players.getActual().getTerritories())
+        println("Total turn number : $turnNumber")
     }
 
     private fun playerAttacksOneTerritory(player: Player): Boolean {
@@ -108,3 +112,4 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
 }
 // todo make initialArmyNumberByPlayerNumber parametrable
+// todo make card symbol equally distributed

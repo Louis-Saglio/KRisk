@@ -93,6 +93,7 @@ fun buildWorld(): World {
             Border(europeDuNord, europeDeLOuest),
             Border(europeDuNord, scandinavie),
             Border(europeDuNord, europeDuSud),
+            Border(europeDuNord, grandeBretagne),
             Border(europeDuSud, ukraine),
             Border(ukraine, scandinavie),
             Border(ukraine, europeDuNord),

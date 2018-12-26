@@ -44,14 +44,15 @@ fun <T> choose(
 fun chooseYesOrNo(message: String): Boolean {
     println("chooseYesOrNo")
     return choose(
-        "$message : yes/no",
-        { setOf("yes", "no").random() },
-        {
+        message = message,
+        ifDebug = { setOf("yes", "no").random() },
+        cast = {
             when (it?.toLowerCase()) {
                 "yes" -> true
                 "no" -> false
                 else -> null
             }
-        }
+        },
+        inputSuggestions = listOf(InputSuggestion("yes"), InputSuggestion("no"))
     )
 }

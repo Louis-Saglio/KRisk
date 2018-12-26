@@ -321,6 +321,10 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         println("$this takes cards of $player : $cards")
         cards.addAll(player.cards)
     }
+
+    fun getCardsForTestTmp(): MutableList<Card> {
+        return cards
+    }
     //</editor-fold>
 }
 
