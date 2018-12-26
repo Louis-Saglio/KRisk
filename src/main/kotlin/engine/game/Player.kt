@@ -44,13 +44,14 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         territory.increaseArmyNumber(1)
     }
 
-    fun captureTerritory(from: Territory, to: Territory, minimum: Int = 0) {
+    fun captureTerritory(from: Territory, to: Territory, defender: Player, minimum: Int = 0) {
         val nbr = choose(
             message = "Choose army number to move from $from to $to between $minimum and ${from.armyNumber - 1}",
             ifDebug = { (minimum until (from.armyNumber)).random().toString() },
             cast = { it?.toIntOrNull() },
             isValid = { it in (minimum..(from.armyNumber)) }
         )
+        defender.territories.remove(to)
         territories.add(to)
         hasConqueredTerritory = true
         println("$this.move $nbr armies from $from to $to")
@@ -114,7 +115,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         computeContinentalReinforcement()
         computeTerritorialReinforcement()
         getCombinationReinforcement()
-        println("$armyToPlaceNumber renforts")
+        println("$armyToPlaceNumber reinforcement")
     }
 
     private fun getCombinationReinforcement() {
@@ -124,6 +125,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
         }
         if (possibleSetsOfCard.isEmpty()) {
             println("$this has no combination")
+            println("cards : $cards")
             return
         }
         val chosenCards = mutableListOf<Card>()
@@ -310,6 +312,15 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     @TestOnly
     fun getAllPossibleSetOfThreeOwnedCardsForTest() = getAllPossibleSetOfThreeOwnedCards()
+
+    fun isDefeated(): Boolean {
+        return territories.isEmpty()
+    }
+
+    fun takeCardsOf(player: Player) {
+        println("$this takes cards of $player : $cards")
+        cards.addAll(player.cards)
+    }
     //</editor-fold>
 }
 

@@ -13,6 +13,18 @@ fun buildWorld(): World {
     val islande = Territory("Islande")
     val ukraine = Territory("Ukraine")
     val scandinavie = Territory("Scandinavie")
+    val afghanistan = Territory("Afghanistan")
+    val chine = Territory("Chine")
+    val inde = Territory("Inde")
+    val tchita = Territory("Tchita")
+    val japon = Territory("Japon")
+    val kamtchatka = Territory("Kamtchatka")
+    val moyenOrient = Territory("Moyen-Orient")
+    val mongolie = Territory("Mongolie")
+    val siam = Territory("Siam")
+    val siberie = Territory("Sibérie")
+    val oural = Territory("Oural")
+    val yakoutie = Territory("Yakoutie")
     return World(
         listOf(
             Continent(
@@ -24,57 +36,57 @@ fun buildWorld(): World {
                 "Asie",
                 7,
                 listOf(
-                    Territory("Afghanistan"),
-                    Territory("Chine"),
-                    Territory("Inde"),
-                    Territory("Tchita"),
-                    Territory("Japon"),
-                    Territory("Kamtchatka"),
-                    Territory("Moyen-Orient"),
-                    Territory("Mongolie"),
-                    Territory("Siam"),
-                    Territory("Sibérie"),
-                    Territory("Oural"),
-                    Territory("Yakoutie")
-                )
-            ),
-            Continent(
-                "Amérique-du-Nord",
-                5,
-                listOf(
-                    Territory("Alaska"),
-                    Territory("Alberta"),
-                    Territory("Amérique centrale"),
-                    Territory("États de l'Est"),
-                    Territory("Groenland"),
-                    Territory("Territoires du Nord-Ouest"),
-                    Territory("Ontario"),
-                    Territory("Québec"),
-                    Territory("États de l'Ouest")
-                )
-            ),
-            Continent(
-                "Amérique-du-Sud",
-                2,
-                listOf(
-                    Territory("Argentine"),
-                    Territory("Brésil"),
-                    Territory("Pérou"),
-                    Territory("Venezuela")
-                )
-            ),
-            Continent(
-                "Océanie",
-                2,
-                listOf(
-                    Territory("Congo"),
-                    Territory("Afrique de l’Est"),
-                    Territory("Égypte"),
-                    Territory("Madagascar"),
-                    Territory("Afrique du Nord"),
-                    Territory("Afrique du Sud")
+                    afghanistan,
+                    chine,
+                    inde,
+                    tchita,
+                    japon,
+                    kamtchatka,
+                    moyenOrient,
+                    mongolie,
+                    siam,
+                    siberie,
+                    oural,
+                    yakoutie
                 )
             )
+//            Continent(
+//                "Amérique-du-Nord",
+//                5,
+//                listOf(
+//                    Territory("Alaska"),
+//                    Territory("Alberta"),
+//                    Territory("Amérique centrale"),
+//                    Territory("États de l'Est"),
+//                    Territory("Groenland"),
+//                    Territory("Territoires du Nord-Ouest"),
+//                    Territory("Ontario"),
+//                    Territory("Québec"),
+//                    Territory("États de l'Ouest")
+//                )
+//            ),
+//            Continent(
+//                "Amérique-du-Sud",
+//                2,
+//                listOf(
+//                    Territory("Argentine"),
+//                    Territory("Brésil"),
+//                    Territory("Pérou"),
+//                    Territory("Venezuela")
+//                )
+//            ),
+//            Continent(
+//                "Océanie",
+//                2,
+//                listOf(
+//                    Territory("Congo"),
+//                    Territory("Afrique de l’Est"),
+//                    Territory("Égypte"),
+//                    Territory("Madagascar"),
+//                    Territory("Afrique du Nord"),
+//                    Territory("Afrique du Sud")
+//                )
+//            )
         ),
         listOf(
             Border(europeDuSud, europeDeLOuest),
@@ -87,7 +99,29 @@ fun buildWorld(): World {
             Border(grandeBretagne, europeDeLOuest),
             Border(grandeBretagne, islande),
             Border(islande, scandinavie),
-            Border(grandeBretagne, scandinavie)
+            Border(grandeBretagne, scandinavie),
+            Border(moyenOrient, afghanistan),
+            Border(moyenOrient, inde),
+            Border(inde, afghanistan),
+            Border(inde, chine),
+            Border(inde, siam),
+            Border(siam, chine),
+            Border(chine, mongolie),
+            Border(chine, siberie),
+            Border(chine, oural),
+            Border(chine, afghanistan),
+            Border(mongolie, japon),
+            Border(mongolie, kamtchatka),
+            Border(mongolie, tchita),
+            Border(mongolie, siberie),
+            Border(japon, kamtchatka),
+            Border(kamtchatka, yakoutie),
+            Border(kamtchatka, tchita),
+            Border(yakoutie, siberie),
+            Border(siberie, oural),
+            Border(siberie, yakoutie),
+            Border(oural, afghanistan)
+
         )
     )
 }

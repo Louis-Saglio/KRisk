@@ -26,7 +26,11 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
         println("Attacker : ${attacker.territory}, defender : ${defender.territory}")
         if (defender.territory.armyNumber == 0) {
             println("${attacker.player} capturate ${defender.territory} from ${defender.player}")
-            attacker.player.captureTerritory(attacker.territory, defender.territory, attackerDiceNbr)
+            attacker.player.captureTerritory(attacker.territory, defender.territory, defender.player, attackerDiceNbr)
+            if (defender.player.isDefeated()) {
+                println("${defender.player} is defeated. ${attacker.player}")
+                attacker.player.takeCardsOf(defender.player)
+            }
             return true
         }
         return false

@@ -19,14 +19,12 @@ class RiskEngine(val world: World, vararg playerNames: String) {
 
     fun placeInitialArmies() {
         println("RiskEngine.placeInitialArmies")
-        debug = true
         players.setToFirst()
         while (players.any { it.getArmyToPlaceNumber() > 0 }) {
             players.getActual().takeIf { it.getArmyToPlaceNumber() > 0 }?.placeOneArmy()
             players.passToNext()
         }
         resumePlayerWorldSituation()
-//        debug = false
     }
 
     private fun resumePlayerWorldSituation() {
@@ -45,27 +43,31 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             turnNumber++
             println("Turn $turnNumber start")
             val playingPlayer = players.getActual()
-            playingPlayer.manageReinforcement()
+            if (!playingPlayer.isDefeated()) {
+                playingPlayer.manageReinforcement()
 
-            playingPlayer.hasConqueredTerritory = false
-            var attackIsPossible: Boolean
-            do {
-                attackIsPossible = playerAttacksOneTerritory(playingPlayer)
-            } while (attackIsPossible && chooseYesOrNo("Continue attack ?"))
+                playingPlayer.hasConqueredTerritory = false
+                var attackIsPossible: Boolean
+                do {
+                    attackIsPossible = playerAttacksOneTerritory(playingPlayer)
+                } while (attackIsPossible && chooseYesOrNo("Continue attack ?"))
 
-            if (playingPlayer.hasConqueredTerritory && cards.isNotEmpty()) {
-                val card = cards[cards.size - 1]
-                cards.remove(card)
-                playingPlayer.addCard(card)
-            } else if (!playingPlayer.hasConqueredTerritory) {
-                println("$playingPlayer didn't conquer a territory")
-            } else if (cards.isEmpty()) {
-                println("No more card to give")
+                if (playingPlayer.hasConqueredTerritory && cards.isNotEmpty()) {
+                    val card = cards[cards.size - 1]
+                    cards.remove(card)
+                    playingPlayer.addCard(card)
+                } else if (!playingPlayer.hasConqueredTerritory) {
+                    println("$playingPlayer didn't conquer a territory")
+                } else if (cards.isEmpty()) {
+                    println("No more card to give")
+                }
+                playingPlayer.fortifyPosition()
+                somebodyHasWon = players.any(Player::hasWon)
+                if (somebodyHasWon) break
+            } else {
+                println("Skip turn because defeated")
             }
-            playingPlayer.fortifyPosition()
-            somebodyHasWon = players.any(Player::hasWon)
             println("Turn $turnNumber end")
-            if (somebodyHasWon) break
             players.passToNext()
         } while (true)
         println("${players.getActual()} wins the game")
