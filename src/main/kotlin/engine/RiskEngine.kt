@@ -44,9 +44,6 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             println("Turn $turnNumber start")
             val playingPlayer = players.getActual()
             if (!playingPlayer.isDefeated()) {
-                println("card stack : $cards")
-                players.forEach { println("$it : ${it.getCardsForTestTmp()}, ${it.getTerritories().isNotEmpty()}") }
-                // todo bug defeated player has card
                 playingPlayer.manageReinforcement()
 
                 playingPlayer.hasConqueredTerritory = false
