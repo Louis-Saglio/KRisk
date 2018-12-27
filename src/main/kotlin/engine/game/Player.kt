@@ -3,6 +3,7 @@ package engine.game
 import engine.InputSuggestion
 import engine.RiskEngine
 import engine.choose
+import engine.chooseYesOrNo
 import engine.game.world.Territory
 import engine.game.world.combinations
 import org.jetbrains.annotations.TestOnly
@@ -89,7 +90,12 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             println("No fortification possible")
             return
         }
-        val firstTerritory = chooseOwnedTerritory { it.armyNumber > 1 && it in possibleSources }
+        val firstTerritory = choose(
+            message = "Choose a territory to fortify from",
+            ifDebug = { possibleSources.random().name },
+            cast = { possibleSources.find { territory -> territory.name == it } },
+            inputSuggestions = possibleSources.map { territory ->  InputSuggestion(territory.name, territory.toString()) }
+        )
         val possibleDestinations = territories.filter { engine.world.areNeighbours(it, firstTerritory) }
         val secondTerritory = choose(
             message = "Choose territory to fortify",
@@ -127,25 +133,32 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             println("cards : $cards")
             return
         }
-        val chosenCards = mutableListOf<Card>()
-        repeat(3) {
-            val card = choose(
-                "choose card $it",
-                { possibleSetsOfCard.random().random().territory.name },
-                { input -> cards.find { card -> card.territory.name == input } },
-                possibleSetsOfCard.flatten().map { card -> InputSuggestion(card.territory.name, card.toString()) },
-                { card -> possibleSetsOfCard.any { setOfCard -> setOfCard.containsAll(chosenCards) && setOfCard.contains(card) } && card !in chosenCards }
-            )
-            chosenCards.add(card)
+        if (chooseYesOrNo("Use combination ?")) {
+            val chosenCards = mutableListOf<Card>()
+            repeat(3) {
+                val card = choose(
+                    "choose card $it",
+                    { possibleSetsOfCard.filter { setOfCard -> setOfCard.containsAll(chosenCards) }.random().random().territory.name },
+                    { input -> cards.find { card -> card.territory.name == input } },
+                    possibleSetsOfCard.flatten().map { card -> InputSuggestion(card.territory.name, card.toString()) },
+                    { card ->
+                        possibleSetsOfCard.any { setOfCard ->
+                            setOfCard.containsAll(chosenCards) && setOfCard.contains(card)
+                        } && card !in chosenCards
+                    }
+                )
+                chosenCards.add(card)
+            }
+            val combination =
+                chosenCards.getBestCombination() ?: throw RuntimeException("No combination in a valid set of card")
+            println("$this got $combination")
+            chosenCards.forEach {
+                it.territory.increaseArmyNumber(2)
+            }
+            engine.cards.addAll(chosenCards)
+            cards.removeAll(chosenCards)
+            armyToPlaceNumber += combination.reinforcement
         }
-        val combination = chosenCards.getBestCombination() ?: throw RuntimeException("No combination in a valid set of card")
-        println("$this got $combination")
-        chosenCards.forEach {
-            it.territory.increaseArmyNumber(2)
-        }
-        engine.cards.addAll(chosenCards)
-        cards.removeAll(chosenCards)
-        armyToPlaceNumber += combination.reinforcement
     }
 
     private fun getAllPossibleSetOfThreeOwnedCards(): Set<Set<Card>> {

@@ -44,6 +44,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
             println("Turn $turnNumber start")
             val playingPlayer = players.getActual()
             if (!playingPlayer.isDefeated()) {
+                println("#&1 $playingPlayer ${playingPlayer.getTerritories()}")
                 playingPlayer.manageReinforcement()
 
                 playingPlayer.hasConqueredTerritory = false

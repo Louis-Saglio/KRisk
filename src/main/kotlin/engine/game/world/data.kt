@@ -25,6 +25,29 @@ fun buildWorld(): World {
     val siberie = Territory("Sibérie")
     val oural = Territory("Oural")
     val yakoutie = Territory("Yakoutie")
+    val alaska = Territory("Alaska")
+    val alberta = Territory("Alberta")
+    val ameriqueCentrale = Territory("Amérique centrale")
+    val etatdeLEst = Territory("États de l'Est")
+    val groenland = Territory("Groenland")
+    val territoireDuNordOuest = Territory("Territoires du Nord-Ouest")
+    val ontario = Territory("Ontario")
+    val quebec = Territory("Québec")
+    val etatsDeLOuest = Territory("États de l'Ouest")
+    val argentine = Territory("Argentine")
+    val bresil = Territory("Brésil")
+    val perou = Territory("Pérou")
+    val venezuela = Territory("Venezuela")
+    val congo = Territory("Congo")
+    val afriqueDeLEst = Territory("Afrique de l’Est")
+    val egypte = Territory("Égypte")
+    val madagascar = Territory("Madagascar")
+    val afriqueDuNord = Territory("Afrique du Nord")
+    val afriqueDuSud = Territory("Afrique du Sud")
+    val indonesie = Territory("Indonésie")
+    val nouvelleGuinee = Territory("Nouvelle Guinée")
+    val australieOccidentale = Territory("Australie occidentale")
+    val australieOrientale = Territory("Australie orientale")
     return World(
         listOf(
             Continent(
@@ -49,44 +72,49 @@ fun buildWorld(): World {
                     oural,
                     yakoutie
                 )
+            ),
+            Continent(
+                "Amérique-du-Nord",
+                5,
+                listOf(
+                    alaska,
+                    alberta,
+                    ameriqueCentrale,
+                    etatdeLEst,
+                    groenland,
+                    territoireDuNordOuest,
+                    ontario,
+                    quebec,
+                    etatsDeLOuest
+                )
+            ),
+            Continent(
+                "Amérique-du-Sud",
+                2,
+                listOf(
+                    argentine,
+                    bresil,
+                    perou,
+                    venezuela
+                )
+            ),
+            Continent(
+                "Afrique",
+                3,
+                listOf(
+                    congo,
+                    afriqueDeLEst,
+                    egypte,
+                    madagascar,
+                    afriqueDuNord,
+                    afriqueDuSud
+                )
+            ),
+            Continent(
+                "Océanie",
+                2,
+                listOf(indonesie, nouvelleGuinee, australieOccidentale, australieOrientale)
             )
-//            Continent(
-//                "Amérique-du-Nord",
-//                5,
-//                listOf(
-//                    Territory("Alaska"),
-//                    Territory("Alberta"),
-//                    Territory("Amérique centrale"),
-//                    Territory("États de l'Est"),
-//                    Territory("Groenland"),
-//                    Territory("Territoires du Nord-Ouest"),
-//                    Territory("Ontario"),
-//                    Territory("Québec"),
-//                    Territory("États de l'Ouest")
-//                )
-//            ),
-//            Continent(
-//                "Amérique-du-Sud",
-//                2,
-//                listOf(
-//                    Territory("Argentine"),
-//                    Territory("Brésil"),
-//                    Territory("Pérou"),
-//                    Territory("Venezuela")
-//                )
-//            ),
-//            Continent(
-//                "Océanie",
-//                2,
-//                listOf(
-//                    Territory("Congo"),
-//                    Territory("Afrique de l’Est"),
-//                    Territory("Égypte"),
-//                    Territory("Madagascar"),
-//                    Territory("Afrique du Nord"),
-//                    Territory("Afrique du Sud")
-//                )
-//            )
         ),
         listOf(
             Border(europeDuSud, europeDeLOuest),
@@ -121,8 +149,54 @@ fun buildWorld(): World {
             Border(yakoutie, siberie),
             Border(siberie, oural),
             Border(siberie, yakoutie),
-            Border(oural, afghanistan)
-
+            Border(oural, afghanistan),
+            Border(ameriqueCentrale, etatdeLEst),
+            Border(ameriqueCentrale, etatsDeLOuest),
+            Border(etatdeLEst, quebec),
+            Border(etatdeLEst, ontario),
+            Border(etatdeLEst, etatsDeLOuest),
+            Border(quebec, groenland),
+            Border(quebec, ontario),
+            Border(groenland, territoireDuNordOuest),
+            Border(groenland, ontario),
+            Border(territoireDuNordOuest, alberta),
+            Border(territoireDuNordOuest, quebec),
+            Border(territoireDuNordOuest, alaska),
+            Border(alaska, alberta),
+            Border(alberta, etatsDeLOuest),
+            Border(alberta, ontario),
+            Border(etatsDeLOuest, ontario),
+            Border(kamtchatka, alaska),
+            Border(ukraine, oural),
+            Border(ukraine, afghanistan),
+            Border(ukraine, moyenOrient),
+            Border(europeDuSud, moyenOrient),
+            Border(islande, groenland),
+            Border(argentine, bresil),
+            Border(argentine, perou),
+            Border(bresil, venezuela),
+            Border(bresil, perou),
+            Border(venezuela, perou),
+            Border(venezuela, ameriqueCentrale),
+            Border(afriqueDuSud, madagascar),
+            Border(afriqueDuSud, afriqueDeLEst),
+            Border(afriqueDuSud, congo),
+            Border(madagascar, afriqueDeLEst),
+            Border(afriqueDeLEst, egypte),
+            Border(afriqueDeLEst, afriqueDuNord),
+            Border(afriqueDeLEst, congo),
+            Border(egypte, moyenOrient),
+            Border(egypte, europeDuSud),
+            Border(egypte, afriqueDuNord),
+            Border(afriqueDuNord, europeDuSud),
+            Border(afriqueDuNord, europeDeLOuest),
+            Border(afriqueDuNord, bresil),
+            Border(siam, indonesie),
+            Border(indonesie, nouvelleGuinee),
+            Border(indonesie, australieOccidentale),
+            Border(nouvelleGuinee, australieOccidentale),
+            Border(nouvelleGuinee, australieOrientale),
+            Border(australieOrientale, australieOccidentale)
         )
     )
 }

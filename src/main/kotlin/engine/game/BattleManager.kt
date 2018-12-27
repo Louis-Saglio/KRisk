@@ -43,7 +43,6 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
     fun fight() {
         var territoryIsCaptured: Boolean
         do {
-            // todo stop if no more capturable territories
             territoryIsCaptured = fightOneTurn()
         } while (!territoryIsCaptured && continueFight())
     }
