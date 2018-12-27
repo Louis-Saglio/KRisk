@@ -1,4 +1,4 @@
-package engine.game.world
+package engine.world
 
 class World(val continents: List<Continent>, val borders: List<Border>) {
 

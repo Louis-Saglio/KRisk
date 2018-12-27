@@ -1,4 +1,4 @@
-package engine.game
+package engine
 
 abstract class Combination {
     abstract val reinforcement: Int

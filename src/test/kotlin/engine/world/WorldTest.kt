@@ -1,4 +1,4 @@
-package engine.game.world
+package engine.world
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertThrows

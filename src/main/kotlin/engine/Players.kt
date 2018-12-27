@@ -1,7 +1,6 @@
-package engine.game
+package engine
 
-import engine.RiskEngine
-import engine.game.world.Territory
+import engine.world.Territory
 
 internal class Players(vararg playerArray: Player) : ArrayList<Player>(playerArray.toMutableList()) {
     // Lot of not business logic

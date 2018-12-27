@@ -1,11 +1,7 @@
-package engine.game
+package engine
 
-import engine.InputSuggestion
-import engine.RiskEngine
-import engine.choose
-import engine.chooseYesOrNo
-import engine.game.world.Territory
-import engine.game.world.combinations
+import engine.world.Territory
+import engine.world.combinations
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.min
 

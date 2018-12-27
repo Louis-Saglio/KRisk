@@ -1,6 +1,5 @@
-package engine.game
+package engine
 
-import engine.RiskEngine
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

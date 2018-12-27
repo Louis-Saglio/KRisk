@@ -1,6 +1,5 @@
 import engine.RiskEngine
-import engine.game.world.buildSimpleWorld
-import engine.game.world.buildWorld
+import engine.world.buildWorld
 
 var debug = true
 

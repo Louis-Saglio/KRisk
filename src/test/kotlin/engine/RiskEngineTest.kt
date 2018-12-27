@@ -1,9 +1,9 @@
 package engine
 
 import debug
-import engine.game.world.Continent
-import engine.game.world.Territory
-import engine.game.world.World
+import engine.world.Continent
+import engine.world.Territory
+import engine.world.World
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import kotlin.test.assertEquals

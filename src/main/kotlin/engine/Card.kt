@@ -1,6 +1,6 @@
-package engine.game
+package engine
 
-import engine.game.world.Territory
+import engine.world.Territory
 
 
 enum class Symbol {

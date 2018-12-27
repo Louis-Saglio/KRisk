@@ -1,4 +1,4 @@
-package engine.game.world
+package engine.world
 
 class Territory(val name: String) {
     internal var armyNumber = 0

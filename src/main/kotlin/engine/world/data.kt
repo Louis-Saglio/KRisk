@@ -1,9 +1,9 @@
-package engine.game.world
+package engine.world
 
-import engine.game.OneOfEachKind
-import engine.game.ThreeArtillery
-import engine.game.ThreeCavalries
-import engine.game.ThreeInfantries
+import engine.OneOfEachKind
+import engine.ThreeArtillery
+import engine.ThreeCavalries
+import engine.ThreeInfantries
 
 fun buildWorld(): World {
     val europeDuSud = Territory("Europe-du-Sud")

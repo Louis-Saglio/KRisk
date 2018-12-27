@@ -1,8 +1,6 @@
 package engine
 
-import debug
-import engine.game.*
-import engine.game.world.World
+import engine.world.World
 import org.jetbrains.annotations.TestOnly
 
 

@@ -1,7 +1,6 @@
-package engine.game
+package engine
 
-import engine.chooseYesOrNo
-import engine.game.world.Territory
+import engine.world.Territory
 
 internal class PlayerTerritory(val player: Player, val territory: Territory)
 
