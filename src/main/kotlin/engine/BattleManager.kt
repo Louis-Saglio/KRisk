@@ -37,7 +37,7 @@ internal class BattleManager(private val attacker: PlayerTerritory, private val 
     }
 
     private fun continueFight() =
-        attacker.territory.armyNumber > 1 && defender.territory.armyNumber > 0 && chooseYesOrNo("Continue fight ?")
+        attacker.territory.armyNumber > 1 && defender.territory.armyNumber > 0 && attacker.player.chooseYesOrNo("Continue fight ?")
 
     fun fight() {
         var territoryIsCaptured: Boolean

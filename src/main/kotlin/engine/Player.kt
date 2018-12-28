@@ -1,9 +1,20 @@
 package engine
 
+import debug
 import engine.world.Territory
 import engine.world.combinations
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.min
+
+const val maxInputTryNumber = 20
+
+private class InputSuggestion(val value: String, toDisplay: String? = null) {
+    private val toDisplay = toDisplay ?: value
+
+    override fun toString(): String {
+        return toDisplay
+    }
+}
 
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
 
@@ -108,7 +119,9 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     internal fun manageReinforcement() {
         println("$this.manageReinforcement")
         computeReinforcement()
-        repeat(armyToPlaceNumber) { placeOneArmy() }
+        repeat(armyToPlaceNumber) {
+            placeOneArmy()
+        }
     }
 
     private fun computeReinforcement() {
@@ -282,6 +295,60 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
 
     fun getTerritories() = territories
 
+    private fun <T> choose(
+        message: String? = null,
+        ifDebug: () -> String?,
+        cast: (String?) -> T?,
+        inputSuggestions: List<InputSuggestion>? = null,
+        isValid: ((T) -> Boolean)? = null
+    ): T {
+        println("$this.choose")
+        // todo : replace ifDebug by random input suggestion
+        if (inputSuggestions != null)
+            println("Choose between ${inputSuggestions.filter {
+                val suggestion = cast(it.value)
+                suggestion != null && isValid?.invoke(suggestion) ?: true
+            }}")
+        var chosen: T?
+        var triedInputNumber = 0
+        do {
+            if (debug && triedInputNumber > maxInputTryNumber)
+                throw RuntimeException("Too many input tried")
+            if (message != null) println(message)
+            if (!debug && engine.lastPendingInput != null) {
+                println("sending output")
+                engine.sendOutput("${engine.lastPendingInput} processed")
+            }
+            val input = if (debug) ifDebug() else engine.readlineFor(this)
+            if (!debug) {
+                engine.lastPendingInput = input
+            }
+            if (debug) {
+                println(">>> $input")
+            }
+            chosen = cast(input)
+            triedInputNumber++
+        } while (chosen == null || if (isValid!=null) !isValid(chosen) else false)
+        println("chosen $chosen")
+        return chosen
+    }
+
+    internal fun chooseYesOrNo(message: String): Boolean {
+        println("chooseYesOrNo")
+        return choose(
+            message = message,
+            ifDebug = { setOf("yes", "no").random() },
+            cast = {
+                when (it?.toLowerCase()) {
+                    "yes" -> true
+                    "no" -> false
+                    else -> null
+                }
+            },
+            inputSuggestions = listOf(InputSuggestion("yes"), InputSuggestion("no"))
+        )
+    }
+
     //<editor-fold desc="TestOnly">
     @TestOnly
     fun addTerritoryForTest(territory: Territory) {
@@ -332,7 +399,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     }
 
     fun removeTerritory(territory: Territory) {
-        println("$this loose $territory")
+        println("$this looses $territory")
         territories.remove(territory)
     }
     //</editor-fold>

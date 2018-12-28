@@ -2,12 +2,18 @@ package engine
 
 import engine.world.World
 import org.jetbrains.annotations.TestOnly
+import java.util.concurrent.LinkedBlockingQueue
 
 
 class RiskEngine(val world: World, vararg playerNames: String) {
 
     private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), *playerNames)
     val cards = world.getTerritories().map { Card(it, Symbol.values().random()) }.shuffled().toMutableList()
+
+    private val inputQueue = LinkedBlockingQueue<String>()
+    private val outputQueue = LinkedBlockingQueue<String>(1)
+    private var waitInputFrom: Player? = null
+    internal var lastPendingInput: String? = null
 
     fun setupTerritories() {
         println("RiskEngine.setupTerritories")
@@ -34,7 +40,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         }
     }
 
-    fun playTurns() {
+    private fun playTurns() {
         var turnNumber = 0
         var somebodyHasWon: Boolean
         do {
@@ -49,7 +55,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
                 var attackIsPossible: Boolean
                 do {
                     attackIsPossible = playerAttacksOneTerritory(playingPlayer)
-                } while (attackIsPossible && chooseYesOrNo("Continue attack ?"))
+                } while (attackIsPossible && playingPlayer.chooseYesOrNo("Continue attack ?"))
 
                 if (playingPlayer.hasConqueredTerritory && cards.isNotEmpty()) {
                     val card = cards[cards.size - 1]
@@ -106,6 +112,39 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     @TestOnly
     internal fun getTerritoriesForTest() = world.getTerritories()
 
+    internal fun readlineFor(player: Player): String {
+        println("$this.readlineFor $player")
+        waitInputFrom = player
+        return inputQueue.take()
+    }
+
+    internal fun sendOutput(output: String) {
+        if (outputQueue.isNotEmpty()) {
+            println("output queue not clear")
+            outputQueue.clear()
+        }
+        outputQueue.put(output)
+    }
+
+    fun processInputFrom(playerName: String, input: String): String {
+        println("$this.processInputFrom $playerName >>> $input")
+        return when {
+            playerName != waitInputFrom?.name -> "Bad player"
+            inputQueue.isNotEmpty() -> "An input is already waiting to be processed"
+            else -> {
+                inputQueue.add(input)
+                outputQueue.take()
+            }
+        }
+    }
+
+    fun start() {
+        setupTerritories()
+        placeInitialArmies()
+        playTurns()
+    }
+
 }
 // todo make initialArmyNumberByPlayerNumber parametrable
 // todo make card symbol equally distributed
+// todo ask if fortify position
