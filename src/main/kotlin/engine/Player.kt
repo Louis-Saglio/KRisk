@@ -164,7 +164,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             chosenCards.forEach {
                 it.territory.increaseArmyNumber(2)
             }
-            engine.cards.addAll(chosenCards)
+            engine.addCards(chosenCards)
             cards.removeAll(chosenCards)
             armyToPlaceNumber += combination.reinforcement
         }

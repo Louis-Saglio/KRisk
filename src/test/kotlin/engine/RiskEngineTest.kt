@@ -22,12 +22,12 @@ internal class RiskEngineTest {
         return World(listOf(c1, c2), listOf())
     }
 
-    private var engine = RiskEngine(buildWorld(), "p1", "p2", "p3")
+    private var engine = RiskEngine(buildWorld(), listOf("p1", "p2", "p3"))
     private var players = engine.getPlayersForTest()
 
     @BeforeEach
     internal fun setUp() {
-        engine = RiskEngine(buildWorld(), "p1", "p2", "p3")
+        engine = RiskEngine(buildWorld(), listOf("p1", "p2", "p3"))
         players = engine.getPlayersForTest()
     }
 

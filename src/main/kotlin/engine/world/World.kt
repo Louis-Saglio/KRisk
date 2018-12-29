@@ -1,6 +1,8 @@
 package engine.world
 
-class World(val continents: List<Continent>, val borders: List<Border>) {
+import com.fasterxml.jackson.annotation.JsonIgnore
+
+class World(val continents: List<Continent>, private val borders: List<Border>) {
 
     init {
         val names = getTerritories().map { it.name }
@@ -10,6 +12,7 @@ class World(val continents: List<Continent>, val borders: List<Border>) {
         }
     }
 
+    @JsonIgnore
     fun getTerritories(): List<Territory> {
         return continents.flatMap { it.territories }
     }

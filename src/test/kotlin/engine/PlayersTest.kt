@@ -11,7 +11,7 @@ internal class PlayersTest {
     fun uniqueName() {
         val engine = Mockito.mock(RiskEngine::class.java)
         assertThrows(RuntimeException::class.java) {
-            Players(Player(engine, "one", 0), Player(engine, "one", 0))
+            Players(listOf(Player(engine, "one", 0), Player(engine, "one", 0)))
         }
     }
 

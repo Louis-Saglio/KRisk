@@ -1,19 +1,22 @@
 package engine
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import engine.world.World
+import engine.world.buildWorld
 import org.jetbrains.annotations.TestOnly
 import java.util.concurrent.LinkedBlockingQueue
 
 
-class RiskEngine(val world: World, vararg playerNames: String) {
+class RiskEngine(val world: World = buildWorld(), playerNames: List<String>) {
 
-    private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), *playerNames)
-    val cards = world.getTerritories().map { Card(it, Symbol.values().random()) }.shuffled().toMutableList()
+    private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), playerNames)
+    private val cards = world.getTerritories().map { Card(it, Symbol.values().random()) }.shuffled().toMutableList()
 
     private val inputQueue = LinkedBlockingQueue<String>()
     private val outputQueue = LinkedBlockingQueue<String>(1)
     private var waitInputFrom: Player? = null
     internal var lastPendingInput: String? = null
+    private var isRunning = false
 
     fun setupTerritories() {
         println("RiskEngine.setupTerritories")
@@ -97,6 +100,10 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         return true
     }
 
+    internal fun addCards(cardCollection: Collection<Card>) {
+        cards.addAll(cardCollection)
+    }
+
     companion object {
         val initialArmyNumberByPlayerNumber = mapOf(
             Pair(3, 35),
@@ -106,9 +113,11 @@ class RiskEngine(val world: World, vararg playerNames: String) {
         )
     }
 
+    @JsonIgnore
     @TestOnly
     internal fun getPlayersForTest() = players
 
+    @JsonIgnore
     @TestOnly
     internal fun getTerritoriesForTest() = world.getTerritories()
 
@@ -129,6 +138,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     fun processInputFrom(playerName: String, input: String): String {
         println("$this.processInputFrom $playerName >>> $input")
         return when {
+            !isRunning -> "Engine not running"
             playerName != waitInputFrom?.name -> "Bad player"
             inputQueue.isNotEmpty() -> "An input is already waiting to be processed"
             else -> {
@@ -139,6 +149,7 @@ class RiskEngine(val world: World, vararg playerNames: String) {
     }
 
     fun start() {
+        isRunning = true
         setupTerritories()
         placeInitialArmies()
         playTurns()

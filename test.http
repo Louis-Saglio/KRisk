@@ -1,0 +1,78 @@
+###############
+### newgame ###
+###############
+
+POST http://localhost:8080/games
+Content-Type: application/json
+
+{"code": "newgame", "playerNumber":  3}
+
+###
+
+POST http://localhost:8080/games/newgame
+Content-Type: application/json
+
+{"playerName":  "Lorem"}
+
+###
+
+POST http://localhost:8080/games/newgame
+Content-Type: application/json
+
+{"playerName":  "Ipsum"}
+
+###
+
+POST http://localhost:8080/games/newgame
+Content-Type: application/json
+
+{"playerName":  "Dolor"}
+
+###
+
+POST http://localhost:8080/games/newgame/input
+Content-Type: application/json
+
+{"playerName": "Lorem", "input": "Ukraine"}
+
+###
+
+
+#############
+### game2 ###
+#############
+
+POST http://localhost:8080/games
+Content-Type: application/json
+
+{"code": "game2", "playerNumber":  3}
+
+###
+
+POST http://localhost:8080/games/game2
+Content-Type: application/json
+
+{"playerName":  "Lorem1"}
+
+###
+
+POST http://localhost:8080/games/game2
+Content-Type: application/json
+
+{"playerName":  "Ipsum1"}
+
+###
+
+POST http://localhost:8080/games/game2
+Content-Type: application/json
+
+{"playerName":  "Dolor1"}
+
+###
+
+POST http://localhost:8080/games/game2/input
+Content-Type: application/json
+
+{"playerName": "Lorem1", "input": "Europe-du-Nord"}
+
+###
