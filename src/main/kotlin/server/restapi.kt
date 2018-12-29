@@ -29,6 +29,13 @@ data class PlayerJoinData(val playerName: String)
 data class GameInputData(val playerName: String, val input: String)
 
 
+internal class GameState(playerName: String, engine: RiskEngine) {
+    val world = engine.world
+    @Suppress("unused") // Used to create a Json response
+    val players = engine.getPlayersPublicData(playerName)
+}
+
+
 private class PreEngine(val code: String, val playerNumber: Int) {
 
     internal val players = mutableListOf<String>()
@@ -79,8 +86,8 @@ fun Application.games() {
                     if (engine == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else {
-                        val out = engine.processInputFrom(gameInputData.playerName, gameInputData.input)
-                        call.respond(out)
+                        engine.processInputFrom(gameInputData.playerName, gameInputData.input)
+                        call.respond(GameState(gameInputData.playerName, engine))
                     }
                 }
             }

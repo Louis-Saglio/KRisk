@@ -16,6 +16,14 @@ private class InputSuggestion(val value: String, toDisplay: String? = null) {
     }
 }
 
+@Suppress("unused") // Fields used as Json response
+internal class PlayerPublicData(
+    val name: String,
+    val cardNumber: Int,
+    val territories: List<Territory>,
+    var cards: List<Card>?
+)
+
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
 
     private var armyToPlaceNumber = armyToPlaceNumber
@@ -30,6 +38,10 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     private val territories = mutableListOf<Territory>()
     private val cards = mutableListOf<Card>()
     var hasConqueredTerritory = false
+
+    internal fun asPublicData(withCards: Boolean): PlayerPublicData {
+        return PlayerPublicData(name, cards.size, territories, if (withCards) cards else null)
+    }
 
     /**
      * Add territory to the owned territories list and place one army on it

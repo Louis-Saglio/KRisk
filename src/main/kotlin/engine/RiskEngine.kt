@@ -155,6 +155,10 @@ class RiskEngine(val world: World = buildWorld(), playerNames: List<String>) {
         playTurns()
     }
 
+    internal fun getPlayersPublicData(playerName: String): List<PlayerPublicData> {
+        return players.map { it.asPublicData(playerName == it.name) }
+    }
+
 }
 // todo make initialArmyNumberByPlayerNumber parametrable
 // todo make card symbol equally distributed
