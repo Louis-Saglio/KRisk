@@ -1,5 +1,8 @@
 package engine.world
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Territory(val name: String) {
     internal var armyNumber = 0
         set(value) {

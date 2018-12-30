@@ -1,20 +1,31 @@
 package server
 
+import engine.PlayerPublicData
 import engine.RiskEngine
+import engine.world.World
 import engine.world.buildSimpleWorld
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.readText
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JSON
 
 // POST /games : (code, playerNumber) -> <gameState>
 // POST /games/<code>/players : (playerName) -> <gameState>
@@ -26,13 +37,13 @@ data class CreateGameData(val code: String, val playerNumber: Int)
 data class PlayerJoinData(val playerName: String)
 
 
+@Serializable
 data class GameInputData(val playerName: String, val input: String)
 
 
-internal class GameState(playerName: String, engine: RiskEngine) {
-    val world = engine.world
-    @Suppress("unused") // Used to create a Json response
-    val players = engine.getPlayersPublicData(playerName)
+@Serializable
+internal class GameState(val world: World, val players: List<PlayerPublicData>) {
+    constructor(playerName: String, engine: RiskEngine): this(engine.world, engine.getPlayersPublicData(playerName))
 }
 
 
@@ -50,10 +61,12 @@ private class PreEngine(val code: String, val playerNumber: Int) {
 private val engines = mutableMapOf<String, RiskEngine>()
 private val preEngines = mutableListOf<PreEngine>()
 
+@ObsoleteCoroutinesApi
 fun Application.games() {
     install(ContentNegotiation) {
         jackson {  }
     }
+    install(WebSockets)
     routing {
         route("/games") {
             post("") {
@@ -80,17 +93,29 @@ fun Application.games() {
                         }
                     }
                 }
-                post("/input") {
-                    val gameInputData = call.receive<GameInputData>()
-                    val engine = engines[call.parameters["code"]]
-                    if (engine == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                    } else {
-                        engine.processInputFrom(gameInputData.playerName, gameInputData.input)
-                        call.respond(GameState(gameInputData.playerName, engine))
+                webSocket("input") {
+                    incoming.mapNotNull { it as Frame.Text }.consumeEach { frame ->
+                        val gameInputData = try {
+                            JSON.parse(GameInputData.serializer(), frame.readText())
+                        } catch (e: Exception) {
+                            null
+                        }
+                        if (gameInputData == null) {
+                            send(Frame.Text("${HttpStatusCode.BadRequest}}"))
+                        } else {
+                            val engine = engines[call.parameters["code"]]
+                            if (engine == null) {
+                                send(Frame.Text("${HttpStatusCode.NotFound}"))
+                            } else {
+                                engine.processInputFrom(gameInputData.playerName, gameInputData.input)
+                                val message = GameState(gameInputData.playerName, engine)
+                                send(Frame.Text(JSON.stringify(GameState.serializer(), message)))
+                            }
+                        }
                     }
                 }
             }
         }
     }
+
 }

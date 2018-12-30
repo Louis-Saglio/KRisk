@@ -1,6 +1,7 @@
 package engine
 
 import engine.world.Territory
+import kotlinx.serialization.Serializable
 
 
 enum class Symbol {
@@ -13,3 +14,7 @@ class Card(val territory: Territory, val symbol: Symbol) {
         return "${territory.name} : $symbol"
     }
 }
+
+// Enums are not serializable
+@Serializable
+class SerializableCard(val territory: Territory, val symbol: String)

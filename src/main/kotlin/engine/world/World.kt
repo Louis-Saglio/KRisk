@@ -1,7 +1,9 @@
 package engine.world
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import kotlinx.serialization.Serializable
 
+@Serializable
 class World(val continents: List<Continent>, private val borders: List<Border>) {
 
     init {

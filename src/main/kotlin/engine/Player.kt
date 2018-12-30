@@ -3,6 +3,7 @@ package engine
 import debug
 import engine.world.Territory
 import engine.world.combinations
+import kotlinx.serialization.Serializable
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.min
 
@@ -16,12 +17,13 @@ private class InputSuggestion(val value: String, toDisplay: String? = null) {
     }
 }
 
+@Serializable
 @Suppress("unused") // Fields used as Json response
 internal class PlayerPublicData(
     val name: String,
     val cardNumber: Int,
     val territories: List<Territory>,
-    var cards: List<Card>?
+    var cards: List<SerializableCard>?
 )
 
 internal class Player(private val engine: RiskEngine, val name: String, armyToPlaceNumber: Int) {
@@ -40,7 +42,7 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
     var hasConqueredTerritory = false
 
     internal fun asPublicData(withCards: Boolean): PlayerPublicData {
-        return PlayerPublicData(name, cards.size, territories, if (withCards) cards else null)
+        return PlayerPublicData(name, cards.size, territories, if (withCards) cards.map { SerializableCard(it.territory, it.symbol.toString()) } else null)
     }
 
     /**

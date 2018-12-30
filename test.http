@@ -33,7 +33,7 @@ Content-Type: application/json
 POST http://localhost:8080/games/newgame/input
 Content-Type: application/json
 
-{"playerName": "Lorem", "input": "Ukraine"}
+{"playerName": "Ipsum", "input": "Scandinavie"}
 
 ###
 
