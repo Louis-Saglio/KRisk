@@ -29,7 +29,6 @@ import kotlinx.serialization.json.JSON
 
 // POST /games : (code, playerNumber) -> <gameState>
 // POST /games/<code>/players : (playerName) -> <gameState>
-// POST /games/<code>/input (input, playerName)  -> <gameState>
 
 data class CreateGameData(val code: String, val playerNumber: Int)
 
@@ -41,6 +40,7 @@ data class PlayerJoinData(val playerName: String)
 data class GameInputData(val playerName: String, val input: String)
 
 
+@Suppress("unused")
 @Serializable
 internal class GameState(val world: World, val players: List<PlayerPublicData>) {
     constructor(playerName: String, engine: RiskEngine): this(engine.world, engine.getPlayersPublicData(playerName))
@@ -53,7 +53,7 @@ private class PreEngine(val code: String, val playerNumber: Int) {
 
     internal fun addPlayer(player: String) {
         if (players.size < playerNumber) {
-            players.add(player)
+            players.safeAdd(player)
         } else throw RuntimeException("Too much players")
     }
 }
@@ -68,14 +68,14 @@ fun Application.games() {
     }
     install(WebSockets)
     routing {
-        route("/games") {
+        route("games") {
             post("") {
                 val post = call.receive<CreateGameData>()
                 val preEngine = PreEngine(post.code, post.playerNumber)
-                preEngines.add(preEngine)
+                preEngines.safeAdd(preEngine)
                 call.respond(preEngine)
             }
-            route("/{code}") {
+            route("{code}") {
                 post("") {
                     val preEngine = preEngines.find { preEngine -> preEngine.code == call.parameters["code"] }
                     if (preEngine == null) {
@@ -86,10 +86,10 @@ fun Application.games() {
                         if (preEngine.players.size == preEngine.playerNumber) {
                             val riskEngine = RiskEngine(buildSimpleWorld(), preEngine.players)
                             GlobalScope.launch { riskEngine.start() }
-                            engines[preEngine.code] = riskEngine
-                            call.respond(riskEngine)
+                            engines.safePut(preEngine.code, riskEngine)
+                            call.respond(GameState(player.playerName, riskEngine))
                         } else {
-                            call.respond(preEngine)
+                            call.respond(HttpStatusCode.OK)
                         }
                     }
                 }
@@ -118,4 +118,14 @@ fun Application.games() {
         }
     }
 
+}
+
+@Synchronized
+private fun <K, V> MutableMap<K, V>.safePut(key: K, value: V) {
+    this[key] = value
+}
+
+@Synchronized
+private fun <E> MutableCollection<E>.safeAdd(item: E) {
+    this.add(item)
 }

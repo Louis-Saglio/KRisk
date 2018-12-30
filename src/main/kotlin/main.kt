@@ -15,8 +15,6 @@ import kotlinx.coroutines.channels.filterNotNull
 import kotlinx.coroutines.channels.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.ImplicitReflectionSerializer
-import kotlinx.serialization.Serializable
 import server.games
 
 var debug = false
@@ -42,7 +40,7 @@ fun main(args: Array<String>) {
                     println("client: server sent ${message.readText()}")
                 }
             }
-            println("ici")
+            println("websocket client >>> ")
             while (true) {
                 val input = readLine()!!
                 send(Frame.Text(input))
