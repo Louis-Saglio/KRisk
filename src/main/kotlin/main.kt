@@ -28,7 +28,7 @@ fun main(args: Array<String>) {
         module = Application::games,
         host = "127.0.0.1",
         port = 8080
-    ).start(false)
+    ).start(true)
 
     runBlocking {
         val client = HttpClient(CIO).config { install(WebSockets) }

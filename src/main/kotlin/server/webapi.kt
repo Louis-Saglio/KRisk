@@ -17,8 +17,10 @@ import io.ktor.response.respond
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
+import io.ktor.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
@@ -55,6 +57,10 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
     private val playerNames = mutableMapOf<String, String>()
     private var engine: RiskEngine? = null
 
+    private fun getPlayerNameByCode(code: String): String {
+        return playerNames[code] ?: throw BadPlayerException("No player found for code $code")
+    }
+
     internal fun addPlayer(playerName: String): AddPlayerResult {
         val randomWord: String
         if (playerNames.size < playerNumber) {
@@ -70,18 +76,19 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         return AddPlayerResult(false, randomWord)
     }
 
-    internal fun toGameState(playerName: String): GameState {
+    internal fun toGameState(playerCode: String): GameState {
         return engine.run {
-            if (this != null) GameState(playerName, this) else throw RuntimeException("Engine not started")
+            if (this != null) GameState(getPlayerNameByCode(playerCode), this) else throw EngineNotStarted("Engine not started")
         }
     }
 
     internal fun processInputFrom(playerCode: String, input: String): String {
-        val playerName = playerNames[playerCode] ?: throw BadPlayerException("No player found for code $playerCode")
-        return engine.run { this?.processInputFrom(playerName, input) ?: throw RuntimeException("Engine not started") }
+        return engine.run { this?.processInputFrom(getPlayerNameByCode(playerCode), input) ?: throw EngineNotStarted("Engine not started") }
     }
 
 }
+
+class EngineNotStarted(message: String) : Throwable(message)
 
 class BadPlayerException(message: String) : Throwable(message)
 
@@ -89,8 +96,9 @@ private fun String.randomWord(): String {
     return this.map { this.random() }.joinToString(separator = "")
 }
 
-private val engines = mutableListOf<HighLevelEngine>()
+private val engines = mutableListOf<HighLevelEngine>() // todo : use ConcurrentSkipListSet<HighLevelEngine>()
 
+@ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 fun Application.games() {
     install(ContentNegotiation) {
@@ -120,7 +128,6 @@ fun Application.games() {
                     // todo send game state when game begins
                     // todo check with multiple engines
                     incoming.mapNotNull { it as Frame.Text }.consumeEach { frame ->
-                        // todo game input data must contains player code
                         val gameInputData = try {
                             JSON.parse(GameInputData.serializer(), frame.readText())
                         } catch (e: Exception) {
@@ -133,8 +140,15 @@ fun Application.games() {
                             if (engine == null) {
                                 send(Frame.Text("${HttpStatusCode.NotFound}"))
                             } else {
-                                engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
-                                send(Frame.Text(JSON.stringify(GameState.serializer(), engine.toGameState(gameInputData.playerCode))))
+                                val response = try {
+                                    engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
+                                    JSON.stringify(GameState.serializer(), engine.toGameState(gameInputData.playerCode))
+                                } catch (e: BadPlayerException) {
+                                    e.message
+                                } catch (e: EngineNotStarted) {
+                                    e.message
+                                }
+                                send(Frame.Text(response?: "null"))
                             }
                         }
                     }
