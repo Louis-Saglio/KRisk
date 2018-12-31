@@ -7,7 +7,7 @@ import org.jetbrains.annotations.TestOnly
 import java.util.concurrent.LinkedBlockingQueue
 
 
-class RiskEngine(val world: World = buildWorld(), playerNames: List<String>) {
+class RiskEngine(val world: World = buildWorld(), playerNames: Collection<String>) {
 
     private val players = Players(this, initialArmyNumberByPlayerNumber.getValue(playerNames.size), playerNames)
     private val cards = world.getTerritories().map { Card(it, Symbol.values().random()) }.shuffled().toMutableList()

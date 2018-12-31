@@ -2,7 +2,7 @@ package engine
 
 import engine.world.Territory
 
-internal class Players(players: List<Player>) : ArrayList<Player>(players) {
+internal class Players(players: Collection<Player>) : ArrayList<Player>(players) {
     // Lot of not business logic
 
     init {
@@ -16,7 +16,7 @@ internal class Players(players: List<Player>) : ArrayList<Player>(players) {
 
     private var currentIndex = 0
 
-    constructor(engine: RiskEngine, armyNumberToPlace: Int, names: List<String>) : this(names.map { Player(engine, it, armyNumberToPlace) })
+    constructor(engine: RiskEngine, armyNumberToPlace: Int, names: Collection<String>) : this(names.map { Player(engine, it, armyNumberToPlace) })
 
     fun getActual(): Player {
         println("--------------------------------")

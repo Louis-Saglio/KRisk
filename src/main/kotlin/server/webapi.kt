@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 
 // POST /games : (code, playerNumber) -> <gameState>
-// POST /games/<code>/players : (playerName) -> <gameState>
+// POST /games/<code>/players : (playerName) -> <playerCode>
 
 data class CreateGameData(val code: String, val playerNumber: Int)
 
@@ -37,64 +37,90 @@ data class PlayerJoinData(val playerName: String)
 
 
 @Serializable
-data class GameInputData(val playerName: String, val input: String)
+data class GameInputData(val playerCode: String, val input: String)
 
 
 @Suppress("unused")
 @Serializable
 internal class GameState(val world: World, val players: List<PlayerPublicData>) {
-    constructor(playerName: String, engine: RiskEngine): this(engine.world, engine.getPlayersPublicData(playerName))
+    constructor(playerName: String, engine: RiskEngine) : this(engine.world, engine.getPlayersPublicData(playerName))
 }
 
 
-private class PreEngine(val code: String, val playerNumber: Int) {
+private class AddPlayerResult(val gameStarted: Boolean, val playerCode: String)
 
-    internal val players = mutableListOf<String>()
 
-    internal fun addPlayer(player: String) {
-        if (players.size < playerNumber) {
-            players.safeAdd(player)
+private class HighLevelEngine(val code: String, val playerNumber: Int) {
+
+    private val playerNames = mutableMapOf<String, String>()
+    private var engine: RiskEngine? = null
+
+    internal fun addPlayer(playerName: String): AddPlayerResult {
+        val randomWord: String
+        if (playerNames.size < playerNumber) {
+            randomWord = "abcdefghijklmnopqrstuvwxyz".randomWord()
+            playerNames.safePut(randomWord, playerName)
         } else throw RuntimeException("Too much players")
+        if (playerNames.size == playerNumber) {
+            engine = RiskEngine(buildSimpleWorld(), playerNames.values).apply {
+                GlobalScope.launch { this@apply.start() }
+            }
+            return AddPlayerResult(true, randomWord)
+        }
+        return AddPlayerResult(false, randomWord)
     }
+
+    internal fun toGameState(playerName: String): GameState {
+        return engine.run {
+            if (this != null) GameState(playerName, this) else throw RuntimeException("Engine not started")
+        }
+    }
+
+    internal fun processInputFrom(playerCode: String, input: String): String {
+        val playerName = playerNames[playerCode] ?: throw BadPlayerException("No player found for code $playerCode")
+        return engine.run { this?.processInputFrom(playerName, input) ?: throw RuntimeException("Engine not started") }
+    }
+
 }
 
-private val engines = mutableMapOf<String, RiskEngine>()
-private val preEngines = mutableListOf<PreEngine>()
+class BadPlayerException(message: String) : Throwable(message)
+
+private fun String.randomWord(): String {
+    return this.map { this.random() }.joinToString(separator = "")
+}
+
+private val engines = mutableListOf<HighLevelEngine>()
 
 @ObsoleteCoroutinesApi
 fun Application.games() {
     install(ContentNegotiation) {
-        jackson {  }
+        jackson { }
     }
     install(WebSockets)
     routing {
         route("games") {
             post("") {
                 val post = call.receive<CreateGameData>()
-                val preEngine = PreEngine(post.code, post.playerNumber)
-                preEngines.safeAdd(preEngine)
-                call.respond(preEngine)
+                val engine = HighLevelEngine(post.code, post.playerNumber)
+                engines.safeAdd(engine)
+                call.respond(engine)
             }
             route("{code}") {
                 post("") {
-                    val preEngine = preEngines.find { preEngine -> preEngine.code == call.parameters["code"] }
-                    if (preEngine == null) {
+                    val engine = engines.find { riskEngine -> riskEngine.code == call.parameters["code"] }
+                    if (engine == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else {
                         val player = call.receive<PlayerJoinData>()
-                        preEngine.addPlayer(player.playerName)
-                        if (preEngine.players.size == preEngine.playerNumber) {
-                            val riskEngine = RiskEngine(buildSimpleWorld(), preEngine.players)
-                            GlobalScope.launch { riskEngine.start() }
-                            engines.safePut(preEngine.code, riskEngine)
-                            call.respond(GameState(player.playerName, riskEngine))
-                        } else {
-                            call.respond(HttpStatusCode.OK)
-                        }
+                        val result = engine.addPlayer(player.playerName)
+                        call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
                 webSocket("input") {
+                    // todo send game state when game begins
+                    // todo check with multiple engines
                     incoming.mapNotNull { it as Frame.Text }.consumeEach { frame ->
+                        // todo game input data must contains player code
                         val gameInputData = try {
                             JSON.parse(GameInputData.serializer(), frame.readText())
                         } catch (e: Exception) {
@@ -103,13 +129,12 @@ fun Application.games() {
                         if (gameInputData == null) {
                             send(Frame.Text("${HttpStatusCode.BadRequest}}"))
                         } else {
-                            val engine = engines[call.parameters["code"]]
+                            val engine = engines.find { it.code == call.parameters["code"] }
                             if (engine == null) {
                                 send(Frame.Text("${HttpStatusCode.NotFound}"))
                             } else {
-                                engine.processInputFrom(gameInputData.playerName, gameInputData.input)
-                                val message = GameState(gameInputData.playerName, engine)
-                                send(Frame.Text(JSON.stringify(GameState.serializer(), message)))
+                                engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
+                                send(Frame.Text(JSON.stringify(GameState.serializer(), engine.toGameState(gameInputData.playerCode))))
                             }
                         }
                     }
@@ -117,7 +142,6 @@ fun Application.games() {
             }
         }
     }
-
 }
 
 @Synchronized
@@ -129,3 +153,10 @@ private fun <K, V> MutableMap<K, V>.safePut(key: K, value: V) {
 private fun <E> MutableCollection<E>.safeAdd(item: E) {
     this.add(item)
 }
+
+@Synchronized
+private fun <E> MutableCollection<E>.safeRemove(item: E) {
+    this.remove(item)
+}
+
+// todo : use custom exceptions

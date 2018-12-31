@@ -14,21 +14,21 @@ Content-Type: application/json
 
 {"playerName":  "Lorem"}
 
-###
+###  cderrnftgwrewsvisfexgbrnqb
 
 POST http://localhost:8080/games/newgame
 Content-Type: application/json
 
 {"playerName":  "Ipsum"}
 
-###
+###  whdcxiposskxbzlqcjtvpjcqwx
 
 POST http://localhost:8080/games/newgame
 Content-Type: application/json
 
 {"playerName":  "Dolor"}
 
-###
+###  qpfiiqnbenjiafzzludsazazvj
 
 POST http://localhost:8080/games/newgame/input
 Content-Type: application/json
