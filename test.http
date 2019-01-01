@@ -12,81 +12,96 @@ Content-Type: application/json
 POST http://localhost:8080/games/newgame/players
 Content-Type: application/json
 
-{"playerName":  "Lorem"}
+{"playerName":  "Lorem", "wishedCode": "lorem"}
 
-###  cderrnftgwrewsvisfexgbrnqb
+###
 
 POST http://localhost:8080/games/newgame/players
 Content-Type: application/json
 
-{"playerName":  "Ipsum"}
+{"playerName":  "Ipsum", "wishedCode": "ipsum"}
 
-###  whdcxiposskxbzlqcjtvpjcqwx
+###
 
 POST http://localhost:8080/games/newgame/players
 Content-Type: application/json
 
-{"playerName":  "Dolor"}
-
-###  qpfiiqnbenjiafzzludsazazvj
-
-POST http://localhost:8080/games/newgame/inputs
-Content-Type: application/json
-
-{"playerCode": "odqmflgxsdejustfnnpxlecwoh", "input": "Scandinavie"}
+{"playerName":  "Dolor", "wishedCode": "dolor"}
 
 ###
 
 POST http://localhost:8080/games/newgame/inputs
 Content-Type: application/json
 
-{"playerCode": "qodbfxswnyfwzkfktaxwtjxjxb", "input": "Ukraine"}
+{"playerCode": "lorem", "input": "Islande"}
 
 ###
 
 POST http://localhost:8080/games/newgame/inputs
 Content-Type: application/json
 
-{"playerCode": "hdbvcaohdfgxxbpuswcwnnfzcc", "input": "Islande"}
+{"playerCode": "ipsum", "input": "Ukraine"}
+
+###
+
+POST http://localhost:8080/games/newgame/inputs
+Content-Type: application/json
+
+{"playerCode": "dolor", "input": "Grande-Bretagne"}
 
 ###
 
 
-#############
-### game2 ###
-#############
+###############
+### oldgame ###
+###############
 
 POST http://localhost:8080/games
 Content-Type: application/json
 
-{"code": "game2", "playerNumber":  3}
+{"code": "oldgame", "playerNumber":  3}
 
 ###
 
-POST http://localhost:8080/games/game2
+POST http://localhost:8080/games/oldgame/players
 Content-Type: application/json
 
-{"playerName":  "Lorem1"}
+{"playerName":  "Sit", "wishedCode": "sit"}
 
 ###
 
-POST http://localhost:8080/games/game2
+POST http://localhost:8080/games/oldgame/players
 Content-Type: application/json
 
-{"playerName":  "Ipsum1"}
+{"playerName":  "Amet", "wishedCode": "amet"}
 
 ###
 
-POST http://localhost:8080/games/game2
+POST http://localhost:8080/games/oldgame/players
 Content-Type: application/json
 
-{"playerName":  "Dolor1"}
+{"playerName":  "Donec", "wishedCode": "donec"}
 
 ###
 
-POST http://localhost:8080/games/game2/input
+POST http://localhost:8080/games/oldgame/inputs
 Content-Type: application/json
 
-{"playerName": "Lorem1", "input": "Europe-du-Nord"}
+{"playerCode": "sit", "input": "Islande"}
 
 ###
+
+POST http://localhost:8080/games/oldgame/inputs
+Content-Type: application/json
+
+{"playerCode": "amet", "input": "Scandinavie"}
+
+###
+
+POST http://localhost:8080/games/oldgame/inputs
+Content-Type: application/json
+
+{"playerCode": "donec", "input": "Grande-Bretagne"}
+
+###
+

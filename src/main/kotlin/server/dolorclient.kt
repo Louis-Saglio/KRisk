@@ -6,5 +6,5 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 suspend fun main(args: Array<String>) {
-    communicateWithServer("Dolor", "newgame", "hdbvcaohdfgxxbpuswcwnnfzcc")
+    communicateWithServer("Dolor", "newgame", "dolor")
 }

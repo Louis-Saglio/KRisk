@@ -36,7 +36,7 @@ import kotlinx.serialization.json.JSON
 data class CreateGameData(val code: String, val playerNumber: Int)
 
 
-data class PlayerJoinData(val playerName: String)
+data class PlayerJoinData(val playerName: String, val wishedCode: String)
 
 
 @Serializable
@@ -74,19 +74,17 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         return (players.find { it.code == code } ?: throw BadPlayerException("No player found for code $code")).name
     }
 
-    internal fun addPlayer(playerName: String): AddPlayerResult {
-        val randomWord: String
+    internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
         if (players.size < playerNumber) {
-            randomWord = "abcdefghijklmnopqrstuvwxyz".randomWord()
-            players.add(HighLevelPlayer(randomWord, playerName))
+            players.add(HighLevelPlayer(playerCode, playerName))
         } else throw RuntimeException("Too much players")
         if (players.size == playerNumber) {
             engine = RiskEngine(buildSimpleWorld(), players.map { it.name }).apply {
                 GlobalScope.launch { this@apply.start() }
             }
-            return AddPlayerResult(true, randomWord)
+            return AddPlayerResult(true, playerCode)
         }
-        return AddPlayerResult(false, randomWord)
+        return AddPlayerResult(false, playerCode)
     }
 
     internal fun toGameState(playerCode: String): GameState {
@@ -130,10 +128,6 @@ class EngineNotStarted(message: String) : Throwable(message)
 
 class BadPlayerException(message: String) : Throwable(message)
 
-// todo make private
-internal fun String.randomWord(): String {
-    return this.map { this.random() }.joinToString(separator = "")
-}
 
 private val engines = mutableListOf<HighLevelEngine>() // todo : use ConcurrentSkipListSet<HighLevelEngine>()
 
@@ -153,14 +147,14 @@ fun Application.games() {
                 engines.safeAdd(engine)
                 call.respond(engine)
             }
-            route("{code}/players") {
-                post("") {
+            route("{code}") {
+                post("players") {
                     val engine = engines.find { riskEngine -> riskEngine.code == call.parameters["code"] }
                     if (engine == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else {
-                        val player = call.receive<PlayerJoinData>()
-                        val result = engine.addPlayer(player.playerName)
+                        val joinData = call.receive<PlayerJoinData>()
+                        val result = engine.addPlayer(joinData.playerName, joinData.wishedCode)
                         call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
@@ -195,17 +189,17 @@ fun Application.games() {
                         val playerCode = call.parameters["playerCode"]!!
                         try {
                             engine.addSocketToPlayer(playerCode, this)
+                            try {
+                                incoming.receive()
+                            } catch (e: ClosedReceiveChannelException) {
+                                engine.removeSocketFromPlayer(playerCode, this)
+                            }
                         } catch (e: BadPlayerException) {
                             println(e.message)
                             close(e)
                         } catch (e: EngineNotStarted) {
                             println(e.message)
                             close(e)
-                        }
-                        try {
-                            incoming.receive()
-                        } catch (e: ClosedReceiveChannelException) {
-                            engine.removeSocketFromPlayer(playerCode, this)
                         }
                     }
                 }
