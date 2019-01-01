@@ -29,6 +29,7 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -58,6 +59,7 @@ private class HighLevelPlayer(val code: String, val name: String) {
     private val socketsLock = ReentrantLock()
 
     suspend fun send(gameState: GameState) {
+        println("$this.send $gameState")
         val jsonGameState = JSON.stringify(GameState.serializer(), gameState)
         socketsLock.withLock {
             for (socket in sockets) {
@@ -67,10 +69,12 @@ private class HighLevelPlayer(val code: String, val name: String) {
     }
 
     fun addSocket(socket: DefaultWebSocketServerSession) {
+        println("$this.addSocket $socket")
         socketsLock.withLock { sockets.add(socket) }
     }
 
     fun removeSocket(socket: DefaultWebSocketServerSession) {
+        println("$this.removeSocket $socket")
         socketsLock.withLock { sockets.remove(socket) }
     }
 }
@@ -82,10 +86,13 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
     private var engine: RiskEngine? = null
 
     private fun getPlayerNameByCode(code: String): String {
-        return (players[code] ?: throw BadPlayerException("No player found for code $code")).name
+        val name = (players[code] ?: throw BadPlayerException("No player found for code $code")).name
+        println("$this.getPlayerNameByCode $code : $name")
+        return name
     }
 
     internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
+        println("$this.addPlayer $playerName, $playerCode")
         if (players.size < playerNumber) {
             players[playerCode] = HighLevelPlayer(playerCode, playerName)
         } else throw RuntimeException("Too much players")
@@ -99,6 +106,7 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
     }
 
     internal fun toGameState(playerCode: String): GameState {
+        println("$this.toGameState $playerCode")
         return engine.run {
             if (this == null) {
                 throw EngineNotStarted("Engine not started")
@@ -122,12 +130,14 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
     }
 
     fun addSocketToPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
+        println("$this.addSocketToPlayer $playerCode, $socket")
         val player = players[playerCode]
             ?: throw BadPlayerException("No player with code $playerCode found for $code")
         player.addSocket(socket)
     }
 
     fun removeSocketFromPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
+        println("$this.removeSocketFromPlayer $playerCode, $socket")
         val player = players[playerCode]
             ?: throw BadPlayerException("No player with code $playerCode found for $code")
         player.removeSocket(socket)
@@ -153,29 +163,39 @@ fun Application.games() {
     routing {
         route("games") {
             post("") {
-                val post = call.receive<CreateGameData>()
+                val post = try {
+                    call.receive<CreateGameData>()
+                } catch (e: IOException) {
+                    return@post call.respond(HttpStatusCode.BadRequest)
+                }
+                println("/games $post")
                 val engine = HighLevelEngine(post.code, post.playerNumber)
                 engines[post.code] = engine
-                call.respond(engine)
+                return@post call.respond(engine)
             }
             route("{code}") {
                 post("players") {
+                    println("/games/players/ ${call.parameters}")
                     val engine = engines[call.parameters["code"]]
                     if (engine == null) {
-                        call.respond(HttpStatusCode.NotFound)
+                        return@post call.respond(HttpStatusCode.NotFound)
                     } else {
-                        val joinData = call.receive<PlayerJoinData>()
+                        val joinData = try {
+                            call.receive<PlayerJoinData>()
+                        } catch (e: IOException) {
+                            return@post call.respond(HttpStatusCode.BadRequest)
+                        }
+                        println("received : $joinData")
                         val result = engine.addPlayer(joinData.playerName, joinData.wishedCode)
-                        call.respond(HttpStatusCode.OK, result.playerCode)
+                        return@post call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
                 post("inputs") {
-                    println("post input ${call.parameters}")
-                    // todo send game state when game begins
-                    // todo check with multiple engines
+                    // todo playerCode in path
+                    println("/games/{code}/players/{playerCode}/inputs ${call.parameters}}")
                     val engine = engines[call.parameters["code"]]
                     if (engine == null) {
-                        call.respond(HttpStatusCode.NotFound)
+                        return@post call.respond(HttpStatusCode.NotFound)
                     } else {
                         val gameInputData = call.receive<GameInputData>()
                         println("$gameInputData received by server")
@@ -183,15 +203,16 @@ fun Application.games() {
                             println("Try to process it")
                             engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
                             println("Done")
-                            call.respond(HttpStatusCode.OK)
+                            return@post call.respond(HttpStatusCode.OK)
                         } catch (e: BadPlayerException) {
-                            call.respond(HttpStatusCode.NotFound, e.message ?: "")
+                            return@post call.respond(HttpStatusCode.NotFound, e.message ?: "")
                         } catch (e: EngineNotStarted) {
-                            call.respond(HttpStatusCode.BadRequest, e.message ?: "")
+                            return@post call.respond(HttpStatusCode.BadRequest, e.message ?: "")
                         }
                     }
                 }
                 webSocket(path = "/players/{playerCode}/state") {
+                    println("/games/players/{playerCode}/state ${call.parameters}")
                     val gameCode = call.parameters["code"]!!
                     val engine = engines[call.parameters["code"]]
                     if (engine == null) {
