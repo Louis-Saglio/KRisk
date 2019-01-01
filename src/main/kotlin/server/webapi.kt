@@ -41,7 +41,7 @@ data class PlayerJoinData(val playerName: String, val wishedCode: String)
 
 
 @Serializable
-data class GameInputData(val playerCode: String, val input: String)
+data class GameInputData(val input: String)
 
 
 @Suppress("unused")
@@ -190,8 +190,7 @@ fun Application.games() {
                         return@post call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
-                post("inputs") {
-                    // todo playerCode in path
+                post("players/{playerCode}/inputs") {
                     println("/games/{code}/players/{playerCode}/inputs ${call.parameters}}")
                     val engine = engines[call.parameters["code"]]
                     if (engine == null) {
@@ -201,7 +200,7 @@ fun Application.games() {
                         println("$gameInputData received by server")
                         try {
                             println("Try to process it")
-                            engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
+                            engine.processInputFrom(call.parameters["playerCode"]!!, gameInputData.input)
                             println("Done")
                             return@post call.respond(HttpStatusCode.OK)
                         } catch (e: BadPlayerException) {
@@ -211,7 +210,7 @@ fun Application.games() {
                         }
                     }
                 }
-                webSocket(path = "/players/{playerCode}/state") {
+                webSocket("players/{playerCode}/state") {
                     println("/games/players/{playerCode}/state ${call.parameters}")
                     val gameCode = call.parameters["code"]!!
                     val engine = engines[call.parameters["code"]]
@@ -240,7 +239,5 @@ fun Application.games() {
     }
 }
 
-// todo : use custom exceptions
 // todo : handle game end
-// todo : add logs
 // todo : send state when rejoining

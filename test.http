@@ -30,24 +30,24 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:8080/games/newgame/inputs
+POST http://localhost:8080/games/newgame/players/lorem/inputs
 Content-Type: application/json
 
-{"playerCode": "lorem", "input": "Islande"}
+{"input": "Islande"}
 
 ###
 
-POST http://localhost:8080/games/newgame/inputs
+POST http://localhost:8080/games/newgame/players/ipsum/inputs
 Content-Type: application/json
 
-{"playerCode": "ipsum", "input": "Ukraine"}
+{"input": "Ukraine"}
 
 ###
 
-POST http://localhost:8080/games/newgame/inputs
+POST http://localhost:8080/games/newgame/players/dolor/inputs
 Content-Type: application/json
 
-{"playerCode": "dolor", "input": "Grande-Bretagne"}
+{"input": "Grande-Bretagne"}
 
 ###
 
@@ -84,24 +84,24 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:8080/games/oldgame/inputs
+POST http://localhost:8080/games/oldgame/players/sit/inputs
 Content-Type: application/json
 
-{"playerCode": "sit", "input": "Islande"}
+{"input": "Grande-Bretagne"}
 
 ###
 
-POST http://localhost:8080/games/oldgame/inputs
+POST http://localhost:8080/games/oldgame/players/amet/inputs
 Content-Type: application/json
 
-{"playerCode": "amet", "input": "Scandinavie"}
+{"input": "Islande"}
 
 ###
 
-POST http://localhost:8080/games/oldgame/inputs
+POST http://localhost:8080/games/oldgame/players/donec/inputs
 Content-Type: application/json
 
-{"playerCode": "donec", "input": "Grande-Bretagne"}
+{"input": "Grande-Bretagne"}
 
 ###
 
