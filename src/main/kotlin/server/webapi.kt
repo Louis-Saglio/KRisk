@@ -29,9 +29,9 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
-
-// POST /games : (code, playerNumber) -> <gameState>
-// POST /games/<code>/players : (playerName) -> <playerCode>
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 data class CreateGameData(val code: String, val playerNumber: Int)
 
@@ -54,32 +54,43 @@ private class AddPlayerResult(val gameStarted: Boolean, val playerCode: String)
 
 
 private class HighLevelPlayer(val code: String, val name: String) {
-    val sockets = mutableListOf<DefaultWebSocketServerSession>()
+    private val sockets = mutableListOf<DefaultWebSocketServerSession>()
+    private val socketsLock = ReentrantLock()
 
     suspend fun send(gameState: GameState) {
         val jsonGameState = JSON.stringify(GameState.serializer(), gameState)
-        for (socket in sockets) {
-            socket.send(Frame.Text(jsonGameState))
+        socketsLock.withLock {
+            for (socket in sockets) {
+                socket.send(Frame.Text(jsonGameState))
+            }
         }
+    }
+
+    fun addSocket(socket: DefaultWebSocketServerSession) {
+        socketsLock.withLock { sockets.add(socket) }
+    }
+
+    fun removeSocket(socket: DefaultWebSocketServerSession) {
+        socketsLock.withLock { sockets.remove(socket) }
     }
 }
 
 
 private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
-    private val players = mutableListOf<HighLevelPlayer>()  // todo : use thread safe data structure
+    private val players = ConcurrentHashMap<String, HighLevelPlayer>()
     private var engine: RiskEngine? = null
 
     private fun getPlayerNameByCode(code: String): String {
-        return (players.find { it.code == code } ?: throw BadPlayerException("No player found for code $code")).name
+        return (players[code] ?: throw BadPlayerException("No player found for code $code")).name
     }
 
     internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
         if (players.size < playerNumber) {
-            players.add(HighLevelPlayer(playerCode, playerName))
+            players[playerCode] = HighLevelPlayer(playerCode, playerName)
         } else throw RuntimeException("Too much players")
         if (players.size == playerNumber) {
-            engine = RiskEngine(buildSimpleWorld(), players.map { it.name }).apply {
+            engine = RiskEngine(buildSimpleWorld(), players.map { it.value.name }).apply {
                 GlobalScope.launch { this@apply.start() }
             }
             return AddPlayerResult(true, playerCode)
@@ -104,22 +115,22 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
             }
             return@run processInputFrom(getPlayerNameByCode(playerCode), input)
         }
-        for (player in players) {
+        for (player in players.values) {
             player.send(toGameState(player.code))
         }
         return result
     }
 
     fun addSocketToPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
-        val player = players.find { it.code == playerCode }
+        val player = players[playerCode]
             ?: throw BadPlayerException("No player with code $playerCode found for $code")
-        player.sockets.add(socket)
+        player.addSocket(socket)
     }
 
     fun removeSocketFromPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
-        val player = players.find { it.code == playerCode }
+        val player = players[playerCode]
             ?: throw BadPlayerException("No player with code $playerCode found for $code")
-        player.sockets.remove(socket)
+        player.removeSocket(socket)
     }
 
 }
@@ -129,7 +140,7 @@ class EngineNotStarted(message: String) : Throwable(message)
 class BadPlayerException(message: String) : Throwable(message)
 
 
-private val engines = mutableListOf<HighLevelEngine>() // todo : use ConcurrentSkipListSet<HighLevelEngine>()
+private val engines = ConcurrentHashMap<String, HighLevelEngine>()
 
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
@@ -144,12 +155,12 @@ fun Application.games() {
             post("") {
                 val post = call.receive<CreateGameData>()
                 val engine = HighLevelEngine(post.code, post.playerNumber)
-                engines.safeAdd(engine)
+                engines[post.code] = engine
                 call.respond(engine)
             }
             route("{code}") {
                 post("players") {
-                    val engine = engines.find { riskEngine -> riskEngine.code == call.parameters["code"] }
+                    val engine = engines[call.parameters["code"]]
                     if (engine == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else {
@@ -162,7 +173,7 @@ fun Application.games() {
                     println("post input ${call.parameters}")
                     // todo send game state when game begins
                     // todo check with multiple engines
-                    val engine = engines.find { engine -> engine.code == call.parameters["code"] }
+                    val engine = engines[call.parameters["code"]]
                     if (engine == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else {
@@ -182,7 +193,7 @@ fun Application.games() {
                 }
                 webSocket(path = "/players/{playerCode}/state") {
                     val gameCode = call.parameters["code"]!!
-                    val engine = engines.find { engine -> engine.code == gameCode }
+                    val engine = engines[call.parameters["code"]]
                     if (engine == null) {
                         close(reason = CloseReason(HttpStatusCode.NotFound.value.toShort(), "No game with code $gameCode found"))
                     } else {
@@ -208,10 +219,7 @@ fun Application.games() {
     }
 }
 
-
-@Synchronized
-private fun <E> MutableCollection<E>.safeAdd(item: E) {
-    this.add(item)
-}
-
 // todo : use custom exceptions
+// todo : handle game end
+// todo : add logs
+// todo : send state when rejoining
