@@ -9,22 +9,23 @@ import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readText
+import io.ktor.http.cio.websocket.close
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
+import io.ktor.util.KtorExperimentalAPI
 import io.ktor.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.mapNotNull
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
@@ -52,23 +53,35 @@ internal class GameState(val world: World, val players: List<PlayerPublicData>) 
 private class AddPlayerResult(val gameStarted: Boolean, val playerCode: String)
 
 
+private class HighLevelPlayer(val code: String, val name: String) {
+    val sockets = mutableListOf<DefaultWebSocketServerSession>()
+
+    suspend fun send(gameState: GameState) {
+        val jsonGameState = JSON.stringify(GameState.serializer(), gameState)
+        for (socket in sockets) {
+            socket.send(Frame.Text(jsonGameState))
+        }
+    }
+}
+
+
 private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
-    private val playerNames = mutableMapOf<String, String>()
+    private val players = mutableListOf<HighLevelPlayer>()  // todo : use thread safe data structure
     private var engine: RiskEngine? = null
 
     private fun getPlayerNameByCode(code: String): String {
-        return playerNames[code] ?: throw BadPlayerException("No player found for code $code")
+        return (players.find { it.code == code } ?: throw BadPlayerException("No player found for code $code")).name
     }
 
     internal fun addPlayer(playerName: String): AddPlayerResult {
         val randomWord: String
-        if (playerNames.size < playerNumber) {
+        if (players.size < playerNumber) {
             randomWord = "abcdefghijklmnopqrstuvwxyz".randomWord()
-            playerNames.safePut(randomWord, playerName)
+            players.add(HighLevelPlayer(randomWord, playerName))
         } else throw RuntimeException("Too much players")
-        if (playerNames.size == playerNumber) {
-            engine = RiskEngine(buildSimpleWorld(), playerNames.values).apply {
+        if (players.size == playerNumber) {
+            engine = RiskEngine(buildSimpleWorld(), players.map { it.name }).apply {
                 GlobalScope.launch { this@apply.start() }
             }
             return AddPlayerResult(true, randomWord)
@@ -78,12 +91,37 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
     internal fun toGameState(playerCode: String): GameState {
         return engine.run {
-            if (this != null) GameState(getPlayerNameByCode(playerCode), this) else throw EngineNotStarted("Engine not started")
+            if (this == null) {
+                throw EngineNotStarted("Engine not started")
+            }
+            return@run GameState(getPlayerNameByCode(playerCode), this)
         }
     }
 
-    internal fun processInputFrom(playerCode: String, input: String): String {
-        return engine.run { this?.processInputFrom(getPlayerNameByCode(playerCode), input) ?: throw EngineNotStarted("Engine not started") }
+    internal suspend fun processInputFrom(playerCode: String, input: String): String {
+        println("$this.processInputFrom $playerCode, $input")
+        val result = engine.run {
+            if (this == null) {
+                throw EngineNotStarted("Engine not started")
+            }
+            return@run processInputFrom(getPlayerNameByCode(playerCode), input)
+        }
+        for (player in players) {
+            player.send(toGameState(player.code))
+        }
+        return result
+    }
+
+    fun addSocketToPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
+        val player = players.find { it.code == playerCode }
+            ?: throw BadPlayerException("No player with code $playerCode found for $code")
+        player.sockets.add(socket)
+    }
+
+    fun removeSocketFromPlayer(playerCode: String, socket: DefaultWebSocketServerSession) {
+        val player = players.find { it.code == playerCode }
+            ?: throw BadPlayerException("No player with code $playerCode found for $code")
+        player.sockets.remove(socket)
     }
 
 }
@@ -92,12 +130,14 @@ class EngineNotStarted(message: String) : Throwable(message)
 
 class BadPlayerException(message: String) : Throwable(message)
 
-private fun String.randomWord(): String {
+// todo make private
+internal fun String.randomWord(): String {
     return this.map { this.random() }.joinToString(separator = "")
 }
 
 private val engines = mutableListOf<HighLevelEngine>() // todo : use ConcurrentSkipListSet<HighLevelEngine>()
 
+@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 fun Application.games() {
@@ -113,7 +153,7 @@ fun Application.games() {
                 engines.safeAdd(engine)
                 call.respond(engine)
             }
-            route("{code}") {
+            route("{code}/players") {
                 post("") {
                     val engine = engines.find { riskEngine -> riskEngine.code == call.parameters["code"] }
                     if (engine == null) {
@@ -124,32 +164,48 @@ fun Application.games() {
                         call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
-                webSocket("input") {
+                post("inputs") {
+                    println("post input ${call.parameters}")
                     // todo send game state when game begins
                     // todo check with multiple engines
-                    incoming.mapNotNull { it as Frame.Text }.consumeEach { frame ->
-                        val gameInputData = try {
-                            JSON.parse(GameInputData.serializer(), frame.readText())
-                        } catch (e: Exception) {
-                            null
+                    val engine = engines.find { engine -> engine.code == call.parameters["code"] }
+                    if (engine == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                    } else {
+                        val gameInputData = call.receive<GameInputData>()
+                        println("$gameInputData received by server")
+                        try {
+                            println("Try to process it")
+                            engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
+                            println("Done")
+                            call.respond(HttpStatusCode.OK)
+                        } catch (e: BadPlayerException) {
+                            call.respond(HttpStatusCode.NotFound, e.message ?: "")
+                        } catch (e: EngineNotStarted) {
+                            call.respond(HttpStatusCode.BadRequest, e.message ?: "")
                         }
-                        if (gameInputData == null) {
-                            send(Frame.Text("${HttpStatusCode.BadRequest}}"))
-                        } else {
-                            val engine = engines.find { it.code == call.parameters["code"] }
-                            if (engine == null) {
-                                send(Frame.Text("${HttpStatusCode.NotFound}"))
-                            } else {
-                                val response = try {
-                                    engine.processInputFrom(gameInputData.playerCode, gameInputData.input)
-                                    JSON.stringify(GameState.serializer(), engine.toGameState(gameInputData.playerCode))
-                                } catch (e: BadPlayerException) {
-                                    e.message
-                                } catch (e: EngineNotStarted) {
-                                    e.message
-                                }
-                                send(Frame.Text(response?: "null"))
-                            }
+                    }
+                }
+                webSocket(path = "/players/{playerCode}/state") {
+                    val gameCode = call.parameters["code"]!!
+                    val engine = engines.find { engine -> engine.code == gameCode }
+                    if (engine == null) {
+                        close(reason = CloseReason(HttpStatusCode.NotFound.value.toShort(), "No game with code $gameCode found"))
+                    } else {
+                        val playerCode = call.parameters["playerCode"]!!
+                        try {
+                            engine.addSocketToPlayer(playerCode, this)
+                        } catch (e: BadPlayerException) {
+                            println(e.message)
+                            close(e)
+                        } catch (e: EngineNotStarted) {
+                            println(e.message)
+                            close(e)
+                        }
+                        try {
+                            incoming.receive()
+                        } catch (e: ClosedReceiveChannelException) {
+                            engine.removeSocketFromPlayer(playerCode, this)
                         }
                     }
                 }
@@ -158,19 +214,10 @@ fun Application.games() {
     }
 }
 
-@Synchronized
-private fun <K, V> MutableMap<K, V>.safePut(key: K, value: V) {
-    this[key] = value
-}
 
 @Synchronized
 private fun <E> MutableCollection<E>.safeAdd(item: E) {
     this.add(item)
-}
-
-@Synchronized
-private fun <E> MutableCollection<E>.safeRemove(item: E) {
-    this.remove(item)
 }
 
 // todo : use custom exceptions

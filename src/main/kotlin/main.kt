@@ -29,22 +29,4 @@ fun main(args: Array<String>) {
         host = "127.0.0.1",
         port = 8080
     ).start(true)
-
-    runBlocking {
-        val client = HttpClient(CIO).config { install(WebSockets) }
-
-        client.ws(method = HttpMethod.Get, host = "127.0.0.1", port = 8080, path = "/games/newgame/input") {
-            val session = this
-            GlobalScope.launch {
-                for (message in session.incoming.map { it as Frame.Text }.filterNotNull()) {
-                    println("client: server sent ${message.readText()}")
-                }
-            }
-            println("websocket client >>> ")
-            while (true) {
-                val input = readLine()!!
-                send(Frame.Text(input))
-            }
-        }
-    }
 }
