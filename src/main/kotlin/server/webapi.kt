@@ -46,7 +46,7 @@ data class GameInputData(val input: String)
 
 @Suppress("unused")
 @Serializable
-internal class GameState(val world: World, val players: List<PlayerPublicData>) {
+internal class GameState private constructor(val world: World, val players: List<PlayerPublicData>) {
     constructor(playerName: String, engine: RiskEngine) : this(engine.world, engine.getPlayersPublicData(playerName))
 }
 
@@ -77,6 +77,10 @@ private class HighLevelPlayer(val code: String, val name: String) {
         println("$this.removeSocket $socket")
         socketsLock.withLock { sockets.remove(socket) }
     }
+
+    override fun toString(): String {
+        return "$name:$code"
+    }
 }
 
 
@@ -91,7 +95,7 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         return name
     }
 
-    internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
+    internal suspend fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
         println("$this.addPlayer $playerName, $playerCode")
         if (players.size < playerNumber) {
             players[playerCode] = HighLevelPlayer(playerCode, playerName)
@@ -115,6 +119,12 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         }
     }
 
+    private suspend fun broadcastState() {
+        for (player in players.values) {
+            player.send(toGameState(player.code))
+        }
+    }
+
     internal suspend fun processInputFrom(playerCode: String, input: String): String {
         println("$this.processInputFrom $playerCode, $input")
         val result = engine.run {
@@ -123,9 +133,7 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
             }
             return@run processInputFrom(getPlayerNameByCode(playerCode), input)
         }
-        for (player in players.values) {
-            player.send(toGameState(player.code))
-        }
+        broadcastState()
         return result
     }
 
@@ -220,6 +228,7 @@ fun Application.games() {
                         val playerCode = call.parameters["playerCode"]!!
                         try {
                             engine.addSocketToPlayer(playerCode, this)
+                            send(Frame.Text(JSON.stringify(GameState.serializer(), engine.toGameState(playerCode))))
                             try {
                                 incoming.receive()
                             } catch (e: ClosedReceiveChannelException) {
@@ -240,4 +249,5 @@ fun Application.games() {
 }
 
 // todo : handle game end
+// todo : notify client when game start
 // todo : send state when rejoining

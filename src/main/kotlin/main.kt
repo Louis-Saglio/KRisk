@@ -1,24 +1,14 @@
 import io.ktor.application.Application
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.features.websocket.ws
-import io.ktor.http.HttpMethod
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readText
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.filterNotNull
-import kotlinx.coroutines.channels.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import server.games
 
 var debug = false
 
+@ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 @ObsoleteCoroutinesApi
 fun main(args: Array<String>) {
