@@ -71,7 +71,8 @@ internal class Player(private val engine: RiskEngine, val name: String, armyToPl
             message = "Choose army number to move from $from to $to between $minimum and ${from.armyNumber - 1}",
             ifDebug = { (minimum until (from.armyNumber)).random().toString() },
             cast = { it?.toIntOrNull() },
-            isValid = { it in (minimum..(from.armyNumber)) }
+            isValid = { it in (minimum..(from.armyNumber)) },
+            inputSuggestions = (minimum until from.armyNumber).map { InputSuggestion(it.toString()) }
         )
         territories.add(to)
         hasConqueredTerritory = true

@@ -163,3 +163,5 @@ class RiskEngine(val world: World = buildWorld(), playerNames: Collection<String
 // todo make initialArmyNumberByPlayerNumber parametrable
 // todo make card symbol equally distributed
 // todo ask if fortify position
+// todo count actual turn number, not player turn number
+// todo auto choose when only one choice possible

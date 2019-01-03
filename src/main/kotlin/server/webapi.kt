@@ -95,7 +95,7 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         return name
     }
 
-    internal suspend fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
+    internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
         println("$this.addPlayer $playerName, $playerCode")
         if (players.size < playerNumber) {
             players[playerCode] = HighLevelPlayer(playerCode, playerName)
@@ -251,3 +251,5 @@ fun Application.games() {
 // todo : handle game end
 // todo : notify client when game start
 // todo : send state when rejoining
+// todo : notify client when it is his turn
+// todo : send into game state rolled dices (bundle choose as input information or with game state)
