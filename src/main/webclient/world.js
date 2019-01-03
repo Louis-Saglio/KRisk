@@ -1,3 +1,13 @@
+function getRandom(min, max) {
+    console.log(min, max);
+    if (max === undefined) {
+        max = min;
+        min = 0;
+    }
+    return (Math.random() * (max - min)) + min
+}
+
+
 const world = {
     territories: {
         '0': {
@@ -108,13 +118,15 @@ const world = {
     },
     colNbr: 19,
     rowNbr: 12,
-    cellWidth: '50px',
+    cellWidth: '5%',
     cellHeight: '50px',
 
     display : function () {
+        const colors = {};
         const table = document.createElement('table');
         document.body.appendChild(table);
         table.style.borderCollapse = 'collapse';
+        table.style.width = '100%';
         for (let i = 0; i < this.rowNbr; i++) {
             const row = document.createElement('tr');
             table.appendChild(row);
@@ -124,9 +136,14 @@ const world = {
                 cell.style.width = this.cellWidth;
                 cell.style.height = this.cellHeight;
                 if (this.territories.hasOwnProperty(j) && this.territories[j].hasOwnProperty(i)) {
-                    cell.style.backgroundColor = "black"
+                    const territory = this.territories[j][i];
+                    console.log(territory);
+                    if (!colors.hasOwnProperty(territory)) {
+                        colors[territory] = 'rgba(' + getRandom(255) + ',' + getRandom(255) + ',' + getRandom(255) + ',' + getRandom(0.5, 1) + ')';
+                    }
+                    cell.style.backgroundColor = colors[territory]
                 } else {
-                    cell.style.backgroundColor = "yellow"
+                    cell.style.backgroundColor = "transparent"
                 }
             }
         }
