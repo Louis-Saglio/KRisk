@@ -97,10 +97,9 @@ const world = {
     "Australie-Orientale": [15, 9],
 };
 
-window.onload = () => {
-
-    const canvasVirtualWidth = 20;
-    const canvasVirtualHeight = 15;
+function displayWorld(world) {
+    const canvasVirtualWidth = 19;
+    const canvasVirtualHeight = 12;
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
     canvas.style.border = '1px solid';
@@ -110,7 +109,43 @@ window.onload = () => {
     const context = canvas.getContext('2d');
     for (const territory in world) {
         // x, y, size, direction, color
+        // noinspection JSUnfilteredForInLoop
         new Case(world[territory][0], world[territory][1], world[territory][2], world[territory][3], world[territory][4]).draw(context)
     }
+}
 
+const host = 'http://127.0.0.1:8080';
+
+async function buildCreateGameComponent() {
+    const root = document.createElement('div');
+    const gameCodeInput = document.createElement('input');
+    gameCodeInput.setAttribute('type', 'text');
+    gameCodeInput.setAttribute('name', 'code');
+    root.appendChild(gameCodeInput);
+    const playerNbrInput = document.createElement('input');
+    playerNbrInput.setAttribute('type', 'number');
+    playerNbrInput.setAttribute('name', 'playerNumber');
+    root.appendChild(playerNbrInput);
+    const submit = document.createElement('button');
+    submit.appendChild(document.createTextNode("Create game"));
+    root.appendChild(submit);
+    submit.onclick = async function (ev) {
+        const result = await (await fetch(
+            `${host}/games`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'code': gameCodeInput.value, 'playerNumber': playerNbrInput.value})
+            }
+        ));
+        console.log(result);
+    };
+    return root
+}
+
+window.onload = async () => {
+    document.body.appendChild(await buildCreateGameComponent())
 };

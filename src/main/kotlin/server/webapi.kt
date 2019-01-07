@@ -7,6 +7,7 @@ import engine.world.buildSimpleWorld
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
@@ -89,6 +90,10 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
     private val players = ConcurrentHashMap<String, HighLevelPlayer>()
     private var engine: RiskEngine? = null
 
+    init {
+        println("$this created")
+    }
+
     private fun getPlayerNameByCode(code: String): String {
         val name = (players[code] ?: throw BadPlayerException("No player found for code $code")).name
         println("$this.getPlayerNameByCode $code : $name")
@@ -151,6 +156,10 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         player.removeSocket(socket)
     }
 
+    override fun toString(): String {
+        return "Game($code, $playerNumber)"
+    }
+
 }
 
 class EngineNotStarted(message: String) : Throwable(message)
@@ -164,6 +173,9 @@ private val engines = ConcurrentHashMap<String, HighLevelEngine>()
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 fun Application.games() {
+    install(CORS) {
+        anyHost()
+    }
     install(ContentNegotiation) {
         jackson { }
     }
@@ -171,15 +183,17 @@ fun Application.games() {
     routing {
         route("games") {
             post("") {
+                println("/games")
                 val post = try {
                     call.receive<CreateGameData>()
                 } catch (e: IOException) {
+                    println(e)
                     return@post call.respond(HttpStatusCode.BadRequest)
                 }
                 println("/games $post")
                 val engine = HighLevelEngine(post.code, post.playerNumber)
                 engines[post.code] = engine
-                return@post call.respond(engine)
+                return@post call.respond(HttpStatusCode.OK)
             }
             route("{code}") {
                 post("players") {

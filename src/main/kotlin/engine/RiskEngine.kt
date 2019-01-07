@@ -106,10 +106,10 @@ class RiskEngine(val world: World = buildWorld(), playerNames: Collection<String
 
     companion object {
         val initialArmyNumberByPlayerNumber = mapOf(
-            Pair(3, 35),
-            Pair(4, 30),
-            Pair(5, 25),
-            Pair(6, 20)
+            3 to 35,
+            4 to 30,
+            5 to 25,
+            6 to 20
         )
     }
 
