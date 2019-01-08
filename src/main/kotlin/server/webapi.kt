@@ -94,6 +94,8 @@ private class HighLevelPlayer(val code: String, val name: String) {
     }
 }
 
+@Serializable
+data class GameResume(val code: String, val playerNumber: Int)
 
 private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
@@ -186,6 +188,7 @@ class BadPlayerException(message: String) : Throwable(message)
 
 
 private val engines = ConcurrentHashMap<String, HighLevelEngine>()
+private val engineListClientSockets = mutableListOf<DefaultWebSocketServerSession>()
 
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
@@ -204,30 +207,19 @@ fun Application.games() {
         }
         route("games") {
             route("front") {
-                get("lobby") {
-                    val host = "${call.request.httpVersion.split("/")[0].toLowerCase()}://${call.request.host()}:${call.request.port()}"
-                    call.respondHtml {
-                        head {
-                            title { +"Lobby" }
-                            script(type = "text/javascript", src = "$host/games/front/static/lobby.js") {}
-                        }
-                        body {
-                            ul {
-                                for (engine in engines.values) {
-                                    li(classes = "game-link") {
-                                        +"${engine.code} : ${engine.actualPlayerNumber}/${engine.playerNumber}"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                static("static") {
+                static {
                     staticRootFolder = File("/home/louis/Projects/Kotlin/KRisk/src/main/kotlin/server/front")
-                    file("lobby.js")
+                    file("index.html")
                 }
             }
-            get { call.respond(engines) }
+            webSocket {
+                engineListClientSockets.safeAdd(this)
+                try {
+                    incoming.receive()
+                } catch (e: ClosedReceiveChannelException) {
+                    engineListClientSockets.safeRemove(this)
+                }
+            }
             post {
                 println("/games")
                 val post = try {
@@ -239,6 +231,9 @@ fun Application.games() {
                 println("/games $post")
                 val engine = HighLevelEngine(post.code, post.playerNumber)
                 engines[post.code] = engine
+                for (socket in engineListClientSockets) {
+                    socket.send(Frame.Text(JSON.stringify(GameResume.serializer(), GameResume(engine.code, engine.playerNumber))))
+                }
                 return@post call.respond(HttpStatusCode.OK)
             }
             route("{code}") {
@@ -310,6 +305,16 @@ fun Application.games() {
             }
         }
     }
+}
+
+@Synchronized
+private fun <E> MutableCollection<E>.safeRemove(e: E) {
+    this.remove(e)
+}
+
+@Synchronized
+private fun <E> MutableCollection<E>.safeAdd(e: E) {
+    this.add(e)
 }
 
 // todo : handle game end
