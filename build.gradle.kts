@@ -27,6 +27,7 @@ dependencies {
     compile("io.ktor:ktor-client-cio:$ktorVersion")
     compile("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.9.1")
     compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.1")
+    compile("io.ktor:ktor-html-builder:$ktorVersion")   
     testCompile("org.jetbrains.kotlin", "kotlin-test", "1.3.10")
     testCompile("org.junit.jupiter", "junit-jupiter-api", "5.2.0")
     testCompile("org.mockito","mockito-core", "2.+")

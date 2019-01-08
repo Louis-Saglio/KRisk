@@ -139,7 +139,7 @@ const world = {
                     const territory = this.territories[j][i];
                     console.log(territory);
                     if (!colors.hasOwnProperty(territory)) {
-                        colors[territory] = 'rgba(' + getRandom(255) + ',' + getRandom(255) + ',' + getRandom(255) + ',' + getRandom(0.5, 1) + ')';
+                        colors[territory] = 'rgba(' + getRandom(200, 255) + ',' + getRandom(225, 255) + ',' + getRandom(225, 255) + ',' + getRandom(0.8, 1) + ')';
                     }
                     cell.style.backgroundColor = colors[territory]
                 } else {

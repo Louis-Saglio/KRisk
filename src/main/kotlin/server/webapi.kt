@@ -9,13 +9,21 @@ import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
+import io.ktor.html.respondHtml
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.close
+import io.ktor.http.content.file
+import io.ktor.http.content.static
+import io.ktor.http.content.staticRootFolder
 import io.ktor.jackson.jackson
+import io.ktor.request.host
+import io.ktor.request.httpVersion
+import io.ktor.request.port
 import io.ktor.request.receive
 import io.ktor.response.respond
+import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
@@ -28,8 +36,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
+import kotlinx.html.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -94,6 +104,9 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         println("$this created")
     }
 
+    val actualPlayerNumber: Int
+        get() = players.size
+
     private fun getPlayerNameByCode(code: String): String {
         val name = (players[code] ?: throw BadPlayerException("No player found for code $code")).name
         println("$this.getPlayerNameByCode $code : $name")
@@ -104,7 +117,10 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
         println("$this.addPlayer $playerName, $playerCode")
         if (players.size < playerNumber) {
             players[playerCode] = HighLevelPlayer(playerCode, playerName)
-        } else throw RuntimeException("Too much players")
+        } else {
+            println("Can't add because too much player in $this")
+            throw TooMuchPlayerException()
+        }
         if (players.size == playerNumber) {
             engine = RiskEngine(buildSimpleWorld(), players.map { it.value.name }).apply {
                 GlobalScope.launch { this@apply.start() }
@@ -162,6 +178,8 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
 }
 
+class TooMuchPlayerException : Throwable()
+
 class EngineNotStarted(message: String) : Throwable(message)
 
 class BadPlayerException(message: String) : Throwable(message)
@@ -181,8 +199,36 @@ fun Application.games() {
     }
     install(WebSockets)
     routing {
+        get("favicon.ico") {
+            call.respond(HttpStatusCode.OK)
+        }
         route("games") {
-            post("") {
+            route("front") {
+                get("lobby") {
+                    val host = "${call.request.httpVersion.split("/")[0].toLowerCase()}://${call.request.host()}:${call.request.port()}"
+                    call.respondHtml {
+                        head {
+                            title { +"Lobby" }
+                            script(type = "text/javascript", src = "$host/games/front/static/lobby.js") {}
+                        }
+                        body {
+                            ul {
+                                for (engine in engines.values) {
+                                    li(classes = "game-link") {
+                                        +"${engine.code} : ${engine.actualPlayerNumber}/${engine.playerNumber}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                static("static") {
+                    staticRootFolder = File("/home/louis/Projects/Kotlin/KRisk/src/main/kotlin/server/front")
+                    file("lobby.js")
+                }
+            }
+            get { call.respond(engines) }
+            post {
                 println("/games")
                 val post = try {
                     call.receive<CreateGameData>()
@@ -208,7 +254,11 @@ fun Application.games() {
                             return@post call.respond(HttpStatusCode.BadRequest)
                         }
                         println("received : $joinData")
-                        val result = engine.addPlayer(joinData.playerName, joinData.wishedCode)
+                        val result = try {
+                            engine.addPlayer(joinData.playerName, joinData.wishedCode)
+                        } catch (e: TooMuchPlayerException) {
+                            return@post call.respond(HttpStatusCode.Locked, "${engine.code} is full")
+                        }
                         return@post call.respond(HttpStatusCode.OK, result.playerCode)
                     }
                 }
