@@ -9,7 +9,6 @@ import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
-import io.ktor.html.respondHtml
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
@@ -18,9 +17,6 @@ import io.ktor.http.content.file
 import io.ktor.http.content.static
 import io.ktor.http.content.staticRootFolder
 import io.ktor.jackson.jackson
-import io.ktor.request.host
-import io.ktor.request.httpVersion
-import io.ktor.request.port
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.get
@@ -36,9 +32,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
-import kotlinx.html.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
+import kotlinx.serialization.list
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -213,10 +209,15 @@ fun Application.games() {
                 }
             }
             webSocket {
+                println("Connexion on ws /games")
                 engineListClientSockets.safeAdd(this)
+                this.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> GameResume(it1.code, it1.playerNumber) })))
+                println(engineListClientSockets)
                 try {
                     incoming.receive()
-                } catch (e: ClosedReceiveChannelException) {
+                } catch(e: ClosedReceiveChannelException) {
+                    println("$this. closed")
+                } finally {
                     engineListClientSockets.safeRemove(this)
                 }
             }
@@ -232,7 +233,7 @@ fun Application.games() {
                 val engine = HighLevelEngine(post.code, post.playerNumber)
                 engines[post.code] = engine
                 for (socket in engineListClientSockets) {
-                    socket.send(Frame.Text(JSON.stringify(GameResume.serializer(), GameResume(engine.code, engine.playerNumber))))
+                    socket.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> GameResume(it1.code, it1.playerNumber) })))
                 }
                 return@post call.respond(HttpStatusCode.OK)
             }

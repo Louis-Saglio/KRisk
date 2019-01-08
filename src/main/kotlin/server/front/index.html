@@ -33,7 +33,6 @@
                         body: JSON.stringify(this.state)
                     }
                 );
-                console.log(result);
             }
 
             updateInput(name, value) {
@@ -45,7 +44,7 @@
             render() {
                 return (
                     <div>
-                        <h2>Creat a new game</h2>
+                        <h2>Create a new game</h2>
                         <input type="text" placeholder="Choose a name" name="gameCode" onChange={(e) => this.updateInput('code', e.target.value)}/>
                         <input type="text" placeholder="Choose a number of player" name="playerNumber" onChange={(e) => this.updateInput('playerNumber', e.target.value)}/>
                         <button onClick={() => this.createGame()}>Create</button>
@@ -54,10 +53,48 @@
             }
         }
 
+        class GameList extends React.Component {
+
+            constructor() {
+                super();
+                this.state = {
+                    games: []
+                };
+                const webSocket = new WebSocket(`ws://${document.location.host}/games`);
+                webSocket.onmessage = (e) => this.onMessage(e)
+            }
+
+            onMessage(messageEvent) {
+                this.setState({
+                    games: JSON.parse(messageEvent.data)
+                }, null)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <h2>Games to join</h2>
+                        <ul>
+                            {this.state.games.map(game => <li key={game.code}>{game.code} : {game.playerNumber}</li>)}
+                        </ul>
+                    </div>
+                );
+            }
+        }
+
+        function Root() {
+            return (
+                <div>
+                    <NewGameCreator/>
+                    <GameList/>
+                </div>
+            );
+        }
+
         ReactDOM.render(
-            <NewGameCreator/>,
+            <Root/>,
             document.getElementById("root")
-        )
+        );
     </script>
 </body>
 </html>
