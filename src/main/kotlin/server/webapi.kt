@@ -58,6 +58,7 @@ internal class GameState private constructor(val world: World, val players: List
 }
 
 
+@Serializable
 private class AddPlayerResult(val gameStarted: Boolean, val playerCode: String)
 
 
@@ -216,7 +217,7 @@ fun Application.games() {
                 try {
                     incoming.receive()
                 } catch(e: ClosedReceiveChannelException) {
-                    println("$this. closed")
+                    println("$this has been closed")
                 } finally {
                     engineListClientSockets.safeRemove(this)
                 }
@@ -247,6 +248,7 @@ fun Application.games() {
                         val joinData = try {
                             call.receive<PlayerJoinData>()
                         } catch (e: IOException) {
+                            println(e)
                             return@post call.respond(HttpStatusCode.BadRequest)
                         }
                         println("received : $joinData")
@@ -255,7 +257,7 @@ fun Application.games() {
                         } catch (e: TooMuchPlayerException) {
                             return@post call.respond(HttpStatusCode.Locked, "${engine.code} is full")
                         }
-                        return@post call.respond(HttpStatusCode.OK, result.playerCode)
+                        return@post call.respond(JSON.stringify(AddPlayerResult.serializer(), result))
                     }
                 }
                 post("players/{playerCode}/inputs") {

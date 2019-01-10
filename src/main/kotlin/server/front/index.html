@@ -38,7 +38,7 @@
             updateInput(name, value) {
                 this.setState({
                     [name]: value
-                }, null)
+                })
             }
 
             render() {
@@ -53,12 +53,55 @@
             }
         }
 
+        class JoinGameInterface extends React.Component {
+
+            constructor() {
+                super();
+                this.state = {
+                    playerName: null,
+                    wishedCode: null
+                }
+            }
+
+            updateState(name, value) {
+                this.setState({
+                    [name]: value
+                })
+            }
+
+            async joinGame() {
+                await fetch(
+                    `${document.location.origin}/games/${this.props.gameCode}/players`,
+                    {
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        method: 'POST',
+                        body: JSON.stringify(this.state)
+                    }
+                );
+            }
+
+            render() {
+                return (
+                    <div>
+                        <h3>Join game {this.props.gameCode}</h3>
+                        <input type="text" placeholder="Choose a player name" onChange={(e) => this.updateState('playerName', e.target.value)}/>
+                        <input type="text" placeholder="Choose a password" onChange={(e) => this.updateState('wishedCode', e.target.value)}/>
+                        <button onClick={() => this.joinGame()}>Join</button>
+                    </div>
+                );
+            }
+        }
+
         class GameList extends React.Component {
 
             constructor() {
                 super();
                 this.state = {
-                    games: []
+                    games: [],
+                    selectedGameCode: null
                 };
                 const webSocket = new WebSocket(`ws://${document.location.host}/games`);
                 webSocket.onmessage = (e) => this.onMessage(e)
@@ -70,13 +113,32 @@
                 }, null)
             }
 
+            onClick(code) {
+                if (this.state.selectedGameCode !== code) {
+                    this.setState({
+                        selectedGameCode: code
+                    });
+                } else {
+                    this.setState({
+                        selectedGameCode: null
+                    })
+                }
+            }
+
             render() {
+                let joinGameInterface;
+                if (this.state.selectedGameCode === null) {
+                    joinGameInterface = null
+                } else {
+                    joinGameInterface = <JoinGameInterface gameCode={this.state.selectedGameCode}/>
+                }
                 return (
                     <div>
                         <h2>Games to join</h2>
                         <ul>
-                            {this.state.games.map(game => <li key={game.code}>{game.code} : {game.playerNumber}</li>)}
+                            {this.state.games.map(game => <li key={game.code} onClick={() => this.onClick(game.code)} >{game.code} : {game.playerNumber}</li>)}
                         </ul>
+                        {joinGameInterface}
                     </div>
                 );
             }
