@@ -92,7 +92,7 @@ private class HighLevelPlayer(val code: String, val name: String) {
 }
 
 @Serializable
-data class GameResume(val code: String, val playerNumber: Int)
+data class GameResume(val code: String, val playerNumber: Int, val actualPlayerNumber: Int)
 
 private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
@@ -137,6 +137,10 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
             }
             return@run GameState(getPlayerNameByCode(playerCode), this)
         }
+    }
+
+    internal fun toGameResume(): GameResume {
+        return GameResume(code, playerNumber, actualPlayerNumber)
     }
 
     private suspend fun broadcastState() {
@@ -212,7 +216,7 @@ fun Application.games() {
             webSocket {
                 println("Connexion on ws /games")
                 engineListClientSockets.safeAdd(this)
-                this.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> GameResume(it1.code, it1.playerNumber) })))
+                this.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> it1.toGameResume() })))
                 println(engineListClientSockets)
                 try {
                     incoming.receive()
@@ -234,7 +238,7 @@ fun Application.games() {
                 val engine = HighLevelEngine(post.code, post.playerNumber)
                 engines[post.code] = engine
                 for (socket in engineListClientSockets) {
-                    socket.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> GameResume(it1.code, it1.playerNumber) })))
+                    socket.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> it1.toGameResume() })))
                 }
                 return@post call.respond(HttpStatusCode.OK)
             }
@@ -256,6 +260,9 @@ fun Application.games() {
                             engine.addPlayer(joinData.playerName, joinData.wishedCode)
                         } catch (e: TooMuchPlayerException) {
                             return@post call.respond(HttpStatusCode.Locked, "${engine.code} is full")
+                        }
+                        for (socket in engineListClientSockets) {
+                            socket.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> it1.toGameResume() })))
                         }
                         return@post call.respond(JSON.stringify(AddPlayerResult.serializer(), result))
                     }

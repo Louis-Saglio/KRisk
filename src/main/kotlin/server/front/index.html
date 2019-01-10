@@ -136,7 +136,7 @@
                     <div>
                         <h2>Games to join</h2>
                         <ul>
-                            {this.state.games.map(game => <li key={game.code} onClick={() => this.onClick(game.code)} >{game.code} : {game.playerNumber}</li>)}
+                            {this.state.games.map(game => <li key={game.code} onClick={() => this.onClick(game.code)} >{game.code} : {game.actualPlayerNumber}/{game.playerNumber}</li>)}
                         </ul>
                         {joinGameInterface}
                     </div>
