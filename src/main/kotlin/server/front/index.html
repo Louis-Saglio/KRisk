@@ -59,7 +59,8 @@
                 super();
                 this.state = {
                     playerName: null,
-                    wishedCode: null
+                    wishedCode: null,
+                    successful: null,
                 }
             }
 
@@ -69,8 +70,14 @@
                 })
             }
 
+            componentDidUpdate(prevprops) {
+                if(this.props !== prevprops) {
+                    this.updateState('successful', null)
+                }
+            }
+
             async joinGame() {
-                await fetch(
+                const result = await fetch(
                     `${document.location.origin}/games/${this.props.gameCode}/players`,
                     {
                         headers: {
@@ -78,14 +85,22 @@
                             'Content-Type': 'application/json'
                         },
                         method: 'POST',
-                        body: JSON.stringify(this.state)
+                        body: JSON.stringify({playerName: this.state.playerName, wishedCode: this.state.wishedCode})
                     }
                 );
+                if (result.status === 200) {
+                    this.setState({successful: true})
+                } else {
+                    this.setState({successful: false})
+                }
             }
 
             render() {
+                const color = {backgroundColor: 'white'};
+                if (this.state.successful === true) color.backgroundColor = 'green';
+                else if (this.state.successful === false) color.backgroundColor = 'red';
                 return (
-                    <div>
+                    <div style={color}>
                         <h3>Join game {this.props.gameCode}</h3>
                         <input type="text" placeholder="Choose a player name" onChange={(e) => this.updateState('playerName', e.target.value)}/>
                         <input type="text" placeholder="Choose a password" onChange={(e) => this.updateState('wishedCode', e.target.value)}/>

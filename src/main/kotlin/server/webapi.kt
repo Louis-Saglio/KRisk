@@ -114,11 +114,19 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
     internal fun addPlayer(playerName: String, playerCode: String): AddPlayerResult {
         println("$this.addPlayer $playerName, $playerCode")
-        if (players.size < playerNumber) {
-            players[playerCode] = HighLevelPlayer(playerCode, playerName)
-        } else {
-            println("Can't add because too much player in $this")
-            throw TooMuchPlayerException()
+        when {
+            players.size == playerNumber -> {
+                // todo : put message in exception
+                println("Can't add because too much player in $this")
+                throw TooMuchPlayerException()
+            }
+            playerCode in players.keys -> {
+                throw BadPlayerException("Can't add because code $playerCode is already used")
+            }
+            else -> {
+                players[playerCode] = HighLevelPlayer(playerCode, playerName)
+                println("${players[playerCode]} added")
+            }
         }
         if (players.size == playerNumber) {
             engine = RiskEngine(buildSimpleWorld(), players.map { it.value.name }).apply {
@@ -260,8 +268,11 @@ fun Application.games() {
                             engine.addPlayer(joinData.playerName, joinData.wishedCode)
                         } catch (e: TooMuchPlayerException) {
                             return@post call.respond(HttpStatusCode.Locked, "${engine.code} is full")
+                        } catch (e: BadPlayerException) {
+                            return@post call.respond(HttpStatusCode.Forbidden, e.message!!)
                         }
                         for (socket in engineListClientSockets) {
+                            println("send games to $socket")
                             socket.send(Frame.Text(JSON.stringify(GameResume.serializer().list, engines.values.map { it1 -> it1.toGameResume() })))
                         }
                         return@post call.respond(JSON.stringify(AddPlayerResult.serializer(), result))
