@@ -105,6 +105,8 @@ private class HighLevelEngine(val code: String, val playerNumber: Int) {
 
     val actualPlayerNumber: Int
         get() = players.size
+    val isStarted: Boolean
+        get() = engine?.getIsRunning() ?: false
 
     private fun getPlayerNameByCode(code: String): String {
         val name = (players[code] ?: throw BadPlayerException("No player found for code $code")).name
@@ -308,16 +310,19 @@ fun Application.games() {
                         val playerCode = call.parameters["playerCode"]!!
                         try {
                             engine.addSocketToPlayer(playerCode, this)
-                            send(Frame.Text(JSON.stringify(GameState.serializer(), engine.toGameState(playerCode))))
+                            send(Frame.Text(
+                                if (engine.isStarted) {
+                                    JSON.stringify(GameState.serializer(), engine.toGameState(playerCode))
+                                } else {
+                                    JSON.stringify(GameResume.serializer(), engine.toGameResume())
+                                }
+                            ))
                             try {
                                 incoming.receive()
                             } catch (e: ClosedReceiveChannelException) {
                                 engine.removeSocketFromPlayer(playerCode, this)
                             }
                         } catch (e: BadPlayerException) {
-                            println(e.message)
-                            close(e)
-                        } catch (e: EngineNotStarted) {
                             println(e.message)
                             close(e)
                         }

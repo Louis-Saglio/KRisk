@@ -49,6 +49,7 @@ fun buildWorld(): World {
     val australieOccidentale = Territory("Australie occidentale")
     val australieOrientale = Territory("Australie orientale")
     return World(
+        "classic",
         listOf(
             Continent(
                 "Europe",
@@ -210,6 +211,7 @@ fun buildSimpleWorld(): World {
     val ukraine = Territory("Ukraine")
     val scandinavie = Territory("Scandinavie")
     return World(
+        "Simple Europe",
         listOf(
             Continent("Ouest", 3, listOf(europeDeLOuest, grandeBretagne, islande, europeDuNord)),
             Continent("Est", 2, listOf(europeDuSud, ukraine, scandinavie))
@@ -230,6 +232,7 @@ fun buildSimpleWorld(): World {
     )
 }
 
+// todo : move in Combination.kt file
 val combinations = setOf(
     ThreeInfantries,
     ThreeCavalries,

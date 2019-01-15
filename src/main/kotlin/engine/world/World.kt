@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import kotlinx.serialization.Serializable
 
 @Serializable
-class World(val continents: List<Continent>, private val borders: List<Border>) {
+class World(val name: String, val continents: List<Continent>, private val borders: List<Border>) {
 
     init {
         val names = getTerritories().map { it.name }

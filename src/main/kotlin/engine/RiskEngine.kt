@@ -18,6 +18,8 @@ class RiskEngine(val world: World = buildWorld(), playerNames: Collection<String
     internal var lastPendingInput: String? = null
     private var isRunning = false
 
+    fun getIsRunning() = isRunning
+
     fun setupTerritories() {
         println("RiskEngine.setupTerritories")
         println(world)
