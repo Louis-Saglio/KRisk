@@ -220,7 +220,8 @@ fun Application.games() {
             route("front") {
                 static {
                     staticRootFolder = File("/home/louis/Projects/Kotlin/KRisk/src/main/kotlin/server/front")
-                    file("index.html")
+                    file("lobby", "lobby.html")
+                    file("game", "game.html")
                 }
             }
             webSocket {
@@ -301,7 +302,7 @@ fun Application.games() {
                     }
                 }
                 webSocket("players/{playerCode}/state") {
-                    println("/games/players/{playerCode}/state ${call.parameters}")
+                    println("/games/{code}/players/{playerCode}/state ${call.parameters}")
                     val gameCode = call.parameters["code"]!!
                     val engine = engines[call.parameters["code"]]
                     if (engine == null) {

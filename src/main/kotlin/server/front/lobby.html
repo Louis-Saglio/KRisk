@@ -89,7 +89,8 @@
                     }
                 );
                 if (result.status === 200) {
-                    this.setState({successful: true})
+                    this.setState({successful: true});
+                    document.location = `${document.location.origin}/games/front/game?playerCode=${this.state.wishedCode}&playerName=${this.state.playerName}&gameCode=${this.props.gameCode}`
                 } else {
                     this.setState({successful: false})
                 }
@@ -158,6 +159,16 @@
                 );
             }
         }
+
+
+        class RiskGame extends React.Component {
+
+            constructor(props) {
+                super(props);
+            }
+
+        }
+
 
         function Root() {
             return (
